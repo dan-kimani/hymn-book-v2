@@ -4,7 +4,7 @@ import * as Clipboard from "expo-clipboard";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, PanResponder, Pressable, ScrollView, Share, Text, View, useColorScheme } from "react-native";
+import { Animated, Dimensions, PanResponder, Pressable, Share, Text, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { JumpSheet } from "@/components/search/JumpSheet";
@@ -54,7 +54,7 @@ export default function HymnReaderScreen() {
   const fontSize = useSettingsStore((s) => s.fontSize);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
   const [hymn, setHymn] = useState<Hymn | null>(null);
-  const scrollRef = useRef<ScrollView | Animated.LegacyRef<ScrollView>>(null);
+  const scrollRef = useRef<any>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -125,6 +125,10 @@ export default function HymnReaderScreen() {
       setPlayingPath(rec.path);
     }
   };
+
+  const isActive = playingId === recording?.id;
+  const recDuration = recording?.duration ?? 0;
+  const progress = isActive && recDuration > 0 ? playback.currentTime / recDuration : 0;
 
   const handleDeleteRecording = () => {
     removeRecording(hymnId);
@@ -394,27 +398,31 @@ export default function HymnReaderScreen() {
             {recording && (
               <View className="mt-6 px-2">
                 <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-2">Recording</Text>
-                <Pressable
-                  className="flex-row items-center gap-3 py-2.5 px-3 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800"
-                  onPress={() => handlePlay(recording)}
-                >
-                  <Ionicons
-                    name={playingId === recording.id ? "pause-circle" : "play-circle"}
-                    size={22}
-                    color={playingId === recording.id ? theme.primary : theme.textMuted}
-                  />
-                  <View className="flex-1">
-                    <Text className="text-[13px] font-medium text-text-primary dark:text-gray-100">
-                      {formatTime(Math.round(recording.duration))}
-                    </Text>
-                    <Text className="text-[11px] text-text-muted dark:text-gray-500 mt-0.5">
-                      {new Date(recording.createdAt).toLocaleDateString()}
-                    </Text>
+                <View className="rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 px-3 py-2.5">
+                  {/* Controls row */}
+                  <View className="flex-row items-center gap-2.5">
+                    <Pressable onPress={() => handlePlay(recording)} hitSlop={8}>
+                      <Ionicons name={isActive && playback.isPlaying ? "pause-circle" : "play-circle"} size={24} color={isActive && playback.isPlaying ? theme.primary : theme.textMuted} />
+                    </Pressable>
+
+                    <View className="flex-1">
+                      {/* Progress bar */}
+                      <View className="h-1 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+                        <View className="h-full rounded-full bg-primary" style={{ width: `${isActive ? progress * 100 : 0}%` }} />
+                      </View>
+
+                      {/* Time + date */}
+                      <View className="flex-row justify-between mt-1.5">
+                        <Text className="text-[11px] text-text-muted dark:text-gray-500">{isActive ? formatTime(Math.round(playback.currentTime)) : formatTime(Math.round(recording.duration))}</Text>
+                        <Text className="text-[11px] text-text-muted dark:text-gray-500">{new Date(recording.createdAt).toLocaleDateString()}</Text>
+                      </View>
+                    </View>
+
+                    <Pressable onPress={handleDeleteRecording} hitSlop={8}>
+                      <Ionicons name="trash-outline" size={16} color={theme.textMuted} />
+                    </Pressable>
                   </View>
-                  <Pressable onPress={handleDeleteRecording} hitSlop={8}>
-                    <Ionicons name="trash-outline" size={16} color={theme.textMuted} />
-                  </Pressable>
-                </Pressable>
+                </View>
               </View>
             )}
 

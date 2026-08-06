@@ -106,23 +106,51 @@ export function useRecorder(hymnId: string) {
  * Hook that returns a player for the given file and play/pause controls.
  */
 export function usePlayback(filePath: string | null) {
-  const source = filePath
-    ? { uri: filePath.startsWith("/") && !filePath.includes("://") ? `file://${filePath}` : filePath }
-    : undefined;
+  const uri = filePath
+    ? filePath.startsWith("/") && !filePath.includes("://") ? `file://${filePath}` : filePath
+    : null;
 
-  const player = useAudioPlayer(source);
+  const player = useAudioPlayer(uri ? { uri } : undefined);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const elapsedRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startedRef = useRef<string | null>(null);
 
-  // Auto-play when source is set
-  useEffect(() => {
-    if (source) {
-      const t = setTimeout(() => {
-        player.play();
-        setIsPlaying(true);
-      }, 300);
-      return () => clearTimeout(t);
+  const clearTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
-  }, [filePath, source]);
+  };
+
+  // Auto-play when uri changes
+  useEffect(() => {
+    if (!uri || startedRef.current === uri) return;
+    startedRef.current = uri;
+    clearTimer();
+
+    const t = setTimeout(() => {
+      player.play();
+      setIsPlaying(true);
+      elapsedRef.current = 0;
+      setCurrentTime(0);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [uri]);
+
+  // Tick elapsed time while playing
+  useEffect(() => {
+    if (isPlaying) {
+      timerRef.current = setInterval(() => {
+        elapsedRef.current += 0.5;
+        setCurrentTime(elapsedRef.current);
+      }, 500);
+    } else {
+      clearTimer();
+    }
+    return clearTimer;
+  }, [isPlaying]);
 
   const toggle = useCallback(() => {
     if (isPlaying) {
@@ -130,9 +158,13 @@ export function usePlayback(filePath: string | null) {
       setIsPlaying(false);
     } else {
       player.play();
+      elapsedRef.current = currentTime;
       setIsPlaying(true);
     }
-  }, [player, isPlaying]);
+  }, [player, isPlaying, currentTime]);
 
-  return { isPlaying, toggle };
+  // Reset on unmount
+  useEffect(() => clearTimer, []);
+
+  return { isPlaying, currentTime, toggle };
 }
