@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nyimbo",
+    "scheme": "gikuyuhymns",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,13 +14,15 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.nyimbo.app"
+      "bundleIdentifier": "app.frame.gikuyuhymns"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#2563EB"
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundColor": "#122648"
       },
-      "package": "com.nyimbo.app"
+      "package": "app.frame.gikuyuhymns",
+      "permissions": ["RECORD_AUDIO"]
     },
     "plugins": [
       "expo-router",

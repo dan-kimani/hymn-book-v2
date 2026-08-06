@@ -31,7 +31,7 @@ export const useRecentsStore = create<RecentsState>()(
       clearRecents: () => set({ recents: [] }),
     }),
     {
-      name: "nyimbo-recents",
+      name: "gikuyuhymns-recents",
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

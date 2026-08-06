@@ -3,41 +3,33 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface RecordingMeta {
-  id: string; // unique ID (timestamp-based)
-  path: string; // file path in FileSystem.documentDirectory
-  duration: number; // duration in seconds
-  createdAt: number; // timestamp
+  id: string;
+  path: string;
+  duration: number;
+  createdAt: number;
 }
 
 interface RecordingsState {
-  recordings: Record<string, RecordingMeta[]>; // hymnId → recordings
-  addRecording: (hymnId: string, recording: RecordingMeta) => void;
-  removeRecording: (hymnId: string, recordingId: string) => void;
-  getRecordings: (hymnId: string) => RecordingMeta[];
+  recordings: Record<string, RecordingMeta | null>;
+  setRecording: (hymnId: string, recording: RecordingMeta) => void;
+  removeRecording: (hymnId: string) => void;
 }
 
 export const useRecordingsStore = create<RecordingsState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       recordings: {},
-      addRecording: (hymnId, recording) =>
+      setRecording: (hymnId, recording) =>
         set((state) => ({
-          recordings: {
-            ...state.recordings,
-            [hymnId]: [...(state.recordings[hymnId] ?? []), recording],
-          },
+          recordings: { ...state.recordings, [hymnId]: recording },
         })),
-      removeRecording: (hymnId, recordingId) =>
+      removeRecording: (hymnId) =>
         set((state) => ({
-          recordings: {
-            ...state.recordings,
-            [hymnId]: (state.recordings[hymnId] ?? []).filter((r) => r.id !== recordingId),
-          },
+          recordings: { ...state.recordings, [hymnId]: null },
         })),
-      getRecordings: (hymnId) => get().recordings[hymnId] ?? [],
     }),
     {
-      name: "nyimbo-recordings",
+      name: "gikuyuhymns-recordings",
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

@@ -33,7 +33,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
     }),
     {
-      name: "nyimbo-settings",
+      name: "gikuyuhymns-settings",
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

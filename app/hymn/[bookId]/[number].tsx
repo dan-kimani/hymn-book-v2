@@ -92,39 +92,44 @@ export default function HymnReaderScreen() {
 
   // Recording
   const { isRecording, elapsed, start, stop } = useRecorder(hymnId);
-  const recordings = useRecordingsStore((s) => s.recordings[hymnId]) ?? [];
-  const addRecording = useRecordingsStore((s) => s.addRecording);
+  const recording = useRecordingsStore((s) => s.recordings[hymnId]);
+  const setRecording = useRecordingsStore((s) => s.setRecording);
   const removeRecording = useRecordingsStore((s) => s.removeRecording);
   // Playback state
   const [playingPath, setPlayingPath] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const playback = usePlayback(playingPath);
 
-  const handleMicPress = async () => {
+  const handleMicPress = () => {
     if (isRecording) {
-      const result = await stop();
-      if (result) {
-        addRecording(hymnId, {
-          id: Date.now().toString(36),
-          path: result.path,
-          duration: result.duration,
-          createdAt: Date.now(),
-        });
-      }
+      stop().then((result) => {
+        if (result) {
+          setRecording(hymnId, {
+            id: Date.now().toString(36),
+            path: result.path,
+            duration: result.duration,
+            createdAt: Date.now(),
+          });
+        }
+      });
     } else {
-      await start();
+      start();
     }
   };
 
-  const handlePlay = (recording: { id: string; path: string }) => {
-    if (playingId === recording.id) {
-      playback.pause();
-      setPlayingId(null);
-      setPlayingPath(null);
+  const handlePlay = (rec: { id: string; path: string }) => {
+    if (playingId === rec.id) {
+      playback.toggle();
     } else {
-      setPlayingId(recording.id);
-      setPlayingPath(recording.path);
+      setPlayingId(rec.id);
+      setPlayingPath(rec.path);
     }
+  };
+
+  const handleDeleteRecording = () => {
+    removeRecording(hymnId);
+    setPlayingId(null);
+    setPlayingPath(null);
   };
 
   const formatTime = (secs: number) => {
@@ -385,22 +390,31 @@ export default function HymnReaderScreen() {
               );
             })}
 
-            {/* Recordings list */}
-            {recordings.length > 0 && (
+            {/* Recording */}
+            {recording && (
               <View className="mt-6 px-2">
-                <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-2">Recordings</Text>
-                {recordings.map((rec) => (
-                  <Pressable key={rec.id} className="flex-row items-center gap-3 py-2.5 px-3 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 mb-1.5" onPress={() => handlePlay(rec)}>
-                    <Ionicons name={playingId === rec.id ? "pause-circle" : "play-circle"} size={22} color={playingId === rec.id ? theme.primary : theme.textMuted} />
-                    <View className="flex-1">
-                      <Text className="text-[13px] font-medium text-text-primary dark:text-gray-100">{formatTime(Math.round(rec.duration))}</Text>
-                      <Text className="text-[11px] text-text-muted dark:text-gray-500 mt-0.5">{new Date(rec.createdAt).toLocaleDateString()}</Text>
-                    </View>
-                    <Pressable onPress={() => removeRecording(hymnId, rec.id)} hitSlop={8}>
-                      <Ionicons name="trash-outline" size={16} color={theme.textMuted} />
-                    </Pressable>
+                <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-2">Recording</Text>
+                <Pressable
+                  className="flex-row items-center gap-3 py-2.5 px-3 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800"
+                  onPress={() => handlePlay(recording)}
+                >
+                  <Ionicons
+                    name={playingId === recording.id ? "pause-circle" : "play-circle"}
+                    size={22}
+                    color={playingId === recording.id ? theme.primary : theme.textMuted}
+                  />
+                  <View className="flex-1">
+                    <Text className="text-[13px] font-medium text-text-primary dark:text-gray-100">
+                      {formatTime(Math.round(recording.duration))}
+                    </Text>
+                    <Text className="text-[11px] text-text-muted dark:text-gray-500 mt-0.5">
+                      {new Date(recording.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <Pressable onPress={handleDeleteRecording} hitSlop={8}>
+                    <Ionicons name="trash-outline" size={16} color={theme.textMuted} />
                   </Pressable>
-                ))}
+                </Pressable>
               </View>
             )}
 
