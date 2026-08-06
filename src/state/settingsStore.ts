@@ -1,0 +1,40 @@
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { BookId } from "../data/types";
+
+interface SettingsState {
+  themeMode: "system" | "light" | "dark";
+  fontSize: number;
+  searchBooks: BookId[];
+  setThemeMode: (mode: "system" | "light" | "dark") => void;
+  setFontSize: (size: number) => void;
+  setSearchBooks: (books: BookId[]) => void;
+  toggleSearchBook: (bookId: BookId) => void;
+}
+
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set, get) => ({
+      themeMode: "system",
+      fontSize: 18,
+      searchBooks: [],
+
+      setThemeMode: (mode) => set({ themeMode: mode }),
+      setFontSize: (size) => set({ fontSize: Math.max(14, Math.min(28, size)) }),
+      setSearchBooks: (books) => set({ searchBooks: books }),
+      toggleSearchBook: (bookId) => {
+        const current = get().searchBooks;
+        if (current.includes(bookId)) {
+          set({ searchBooks: current.filter((b) => b !== bookId) });
+        } else {
+          set({ searchBooks: [...current, bookId] });
+        }
+      },
+    }),
+    {
+      name: "nyimbo-settings",
+      storage: createJSONStorage(() => AsyncStorage),
+    },
+  ),
+);
