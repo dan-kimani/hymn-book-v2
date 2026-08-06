@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Nyimbo Cia Gikuyu",
+    "slug": "nyimbo-cia-gikuyu",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "nyimbo",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#2563EB",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.nyimbo.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#2563EB"
+      },
+      "package": "com.nyimbo.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-sqlite",
+      "expo-asset",
+      "expo-sharing",
+      "expo-status-bar",
+      "expo-splash-screen",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Nyimbo Cia Gikuyu to access your microphone for recording hymn tunes."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
