@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Image, Pressable, Text, TextInput, useColorScheme, View } from "react-native";
@@ -8,8 +7,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PressableScale } from "@/components/common/PressableScale";
 import { SearchResultRow } from "@/components/search/SearchResultRow";
-import { fetchDailyHymn, searchByNumber, searchStanzas } from "@/data/queries";
-import type { StanzaResult } from "@/data/types";
+import { BottomGlow, TopGlow } from "@/components/SoftGlow";
+import { useHymnSearchStore } from "@/state/hymnSearchStore";
 import { useRecentsStore } from "@/state/recentsStore";
 import { useSettingsStore } from "@/state/settingsStore";
 import { theme } from "@/theme/colors";
@@ -17,57 +16,31 @@ import { BOOK_COVERS, BOOKS } from "@/utils/constants";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<StanzaResult[]>([]);
-  const [searching, setSearching] = useState(false);
   const [focused, setFocused] = useState(false);
-  const recents = useRecentsStore((s) => s.recents);
-  const removeRecent = useRecentsStore((s) => s.removeRecent);
+  const [localQuery, setLocalQuery] = useState("");
+
+  const query = useHymnSearchStore((s) => s.query);
+  const results = useHymnSearchStore((s) => s.results);
+  const searching = useHymnSearchStore((s) => s.searching);
+  const dailyHymn = useHymnSearchStore((s) => s.dailyHymn);
+  const setQuery = useHymnSearchStore((s) => s.setQuery);
+  const clearSearch = useHymnSearchStore((s) => s.clearSearch);
+  const loadDailyHymn = useHymnSearchStore((s) => s.loadDailyHymn);
+
+  const { recents, removeRecent } = useRecentsStore((s) => s);
+
   const searchBooks = useSettingsStore((s) => s.searchBooks);
-  // null = search all; when all 4 are on, treat as search-all for broader results
   const searchScope = searchBooks.length === 4 ? null : searchBooks;
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [dailyHymn, setDailyHymn] = useState<any>(null);
 
+  useEffect(() => { loadDailyHymn(); }, []);
   useEffect(() => {
-    fetchDailyHymn().then(setDailyHymn);
-  }, []);
-
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      setSearching(false);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      setSearching(true);
-      const num = query.match(/^#?(\d{1,4})$/);
-      if (num) {
-        const r = await searchByNumber(parseInt(num[1]), searchScope);
-        if (r.length > 0) {
-          setResults(
-            r.map((x) => ({
-              hymnId: x.id,
-              bookId: x.bookId,
-              bookName: x.bookName,
-              hymnNumber: x.number,
-              hymnTitle: x.title,
-              verseNumber: 1,
-              stanzaIndex: 0,
-              stanzaText: x.firstLine,
-              rank: 0,
-            })),
-          );
-          return;
-        }
-      }
-      setResults(await searchStanzas(query, searchScope, 40));
-    }, 200);
+    const timer = setTimeout(() => setQuery(localQuery, searchScope), 200);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [localQuery]);
 
   const openHymn = (bookId: string, number: number, verse?: number, stanza?: number) =>
     router.push({
@@ -80,27 +53,19 @@ export default function HomeScreen() {
       },
     });
 
-  const active = searching && results.length > 0;
-  const empty = query.length > 0 && searching && results.length === 0;
+  const active = query.length > 0 && results.length > 0;
+  const empty = query.length > 0 && !searching && results.length === 0;
   const idle = !active && !empty;
 
   const headerOpacity = scrollY.interpolate({ inputRange: [0, 32], outputRange: [0, 1], extrapolate: "clamp" });
   const onScroll = Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false });
 
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950" style={{ }}>
+    <View className="flex-1 bg-white dark:bg-slate-950" style={{}}>
       {/* ── Floating search bar ─────────────────────────────── */}
       <Animated.View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
         {/* Tall seamless gradient — opaque behind search, imperceptibly fades to transparent */}
-        <Animated.View className="absolute left-0 right-0 top-0" style={{ height: insets.top + 180, opacity: headerOpacity }} pointerEvents="none">
-          <LinearGradient
-            colors={isDark ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.85)", "rgba(15,23,42,0.45)", "rgba(15,23,42,0.08)", "transparent"] : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.82)", "rgba(255,255,255,0.35)", "rgba(255,255,255,0.06)", "transparent"]}
-            locations={[0, 0.35, 0.6, 0.82, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            className="flex-1"
-          />
-        </Animated.View>
+        <TopGlow height={insets.top + 180} opacity={headerOpacity} />
 
         {/* BlurView limited to behind the search input only — no hard bottom edge */}
         <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: insets.top + 72, opacity: headerOpacity }} pointerEvents="none">
@@ -123,15 +88,21 @@ export default function HomeScreen() {
               className="flex-1 text-[15px] text-text-primary dark:text-gray-100"
               placeholder="Search hymns by number, title, or lyrics…"
               placeholderTextColor={theme.textMuted}
-              value={query}
-              onChangeText={setQuery}
+              value={localQuery}
+              onChangeText={setLocalQuery}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
               autoCorrect={false}
               returnKeyType="search"
             />
             {query.length > 0 && (
-              <Pressable onPress={() => setQuery("")} hitSlop={8}>
+              <Pressable
+                onPress={() => {
+                  setLocalQuery("");
+                  clearSearch();
+                }}
+                hitSlop={8}
+              >
                 <Ionicons name="close-circle" size={17} color={theme.textMuted} />
               </Pressable>
             )}
@@ -202,10 +173,9 @@ export default function HomeScreen() {
               <View className="mx-5 gap-2">
                 {recents.slice(0, 5).map((item) => {
                   const book = BOOKS.find((b) => b.id === item.bookId);
-                  const cover = book ? BOOK_COVERS[book.id] : null;
                   return (
                     <PressableScale key={item.hymnId} className="flex-row items-center gap-3" onPress={() => openHymn(item.bookId, item.number)}>
-                      {cover ? <Image source={cover} className="w-9 h-12 rounded-sm" resizeMode="cover" /> : <View className="w-9 h-12 rounded-sm" style={{ backgroundColor: (book?.color ?? theme.primary) + "20" }} />}
+                      <View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: book?.color ?? theme.primary }} />
                       <View className="flex-1">
                         <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
                           {item.title}
@@ -251,6 +221,7 @@ export default function HomeScreen() {
           {/* The search bar placeholder already teaches the user how to search */}
         </Animated.ScrollView>
       )}
+      <BottomGlow />
     </View>
   );
 }
