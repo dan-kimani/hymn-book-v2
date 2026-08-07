@@ -4,34 +4,21 @@ import * as SQLite from "expo-sqlite";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
+async function copyFromAsset(dbName: string, assetModule: any): Promise<void> {
+  const dbPath = `${FileSystem.documentDirectory}${dbName}`;
+  const info = await FileSystem.getInfoAsync(dbPath);
+  if (info.exists) return; // already copied
+
+  const [{ localUri }] = await Asset.loadAsync(assetModule);
+  if (!localUri) throw new Error("Asset localUri is null");
+  await FileSystem.copyAsync({ from: localUri, to: dbPath });
+}
+
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (db) return db;
 
-  const DB_NAME = "hymns.db";
-  const dbPath = `${FileSystem.documentDirectory}${DB_NAME}`;
-
-  // Copy database from bundled asset to writable location.
-  // Always overwrite to avoid stale/corrupt cached copies.
-  try {
-    const [{ localUri }] = await Asset.loadAsync(require("../../assets/data/hymns.db"));
-    if (!localUri) throw new Error("Asset localUri is null");
-    await FileSystem.copyAsync({ from: localUri, to: dbPath });
-  } catch (e) {
-    // If the asset is already at the document directory (development),
-    // try to open it directly without copying.
-    const info = await FileSystem.getInfoAsync(dbPath);
-    if (!info.exists) {
-      throw new Error(`Failed to copy database: ${e instanceof Error ? e.message : String(e)}`);
-    }
-  }
-
-  // Verify the copied file is non-trivial (13 MB)
-  const info = await FileSystem.getInfoAsync(dbPath);
-  if (!info.exists || (info.size && info.size < 1024)) {
-    throw new Error("Database copy failed: file is missing or too small");
-  }
-
-  db = await SQLite.openDatabaseAsync(DB_NAME, undefined, FileSystem.documentDirectory!);
+  await copyFromAsset("hymns.db", require("../../assets/data/hymns.db"));
+  db = await SQLite.openDatabaseAsync("hymns.db", undefined, FileSystem.documentDirectory!);
   return db;
 }
 

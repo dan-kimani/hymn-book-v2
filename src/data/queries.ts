@@ -45,13 +45,11 @@ export async function searchStanzas(query: string, bookIds: string[] | null = nu
 
   // Use prefix matching for partial-word search (e.g., "utuk" matches "ũtukũ")
   const terms = sanitized.split(/\s+/).filter(Boolean);
-  const ftsQuery = terms.map((t) => `"${t}"*`).join(" AND ");
+  const ftsTerms = terms.map((t) => `"${t}"*`).join(" OR ");
 
   let bookFilter = "";
-  let bookParams: string[] = [];
   if (bookIds && bookIds.length > 0) {
-    bookFilter = `AND s.book_id IN (${bookIds.map(() => "?").join(",")})`;
-    bookParams = bookIds;
+    bookFilter = `AND s.book_id IN (${bookIds.map((id) => `'${id}'`).join(",")})`;
   }
 
   // Subquery: get the best (min rank) stanza per hymn, then deduplicate by hymnId
@@ -66,14 +64,14 @@ export async function searchStanzas(query: string, bookIds: string[] | null = nu
              MIN(rank) as minRank
       FROM stanzas_fts f
       JOIN stanzas_content s ON f.rowid = s.rowid
-      WHERE stanzas_fts MATCH ? ${bookFilter}
+      WHERE stanzas_fts MATCH '${ftsTerms.replace(/'/g, "''")}' ${bookFilter}
       GROUP BY s.hymn_id
       ORDER BY minRank
-      LIMIT ?
+      LIMIT ${limit}
     )
   `;
 
-  return db.getAllAsync<StanzaResult>(sql, [ftsQuery, ...bookParams, limit]);
+  return db.getAllAsync<StanzaResult>(sql);
 }
 
 export async function fetchDailyHymn(): Promise<{
