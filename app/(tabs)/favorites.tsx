@@ -1,22 +1,32 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  Alert,
-  FlatList,
-  Image,
-  Modal,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, FlatList, Image, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useCollectionsStore } from "@/state/collectionsStore";
 import { useFavoritesStore } from "@/state/favoritesStore";
-import { BOOK_COVERS, BOOKS } from "@/utils/constants";
+import { useBibleBookmarksStore } from "@/state/bibleBookmarksStore";
 import { theme } from "@/theme/colors";
+import { BOOK_COVERS, BOOKS } from "@/utils/constants";
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+}
+
+function monthLabel(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
 
 export default function FavoritesScreen() {
   const insets = useSafeAreaInsets();
@@ -25,6 +35,23 @@ export default function FavoritesScreen() {
   const collections = useCollectionsStore((s) => s.collections);
   const createCollection = useCollectionsStore((s) => s.createCollection);
   const deleteCollection = useCollectionsStore((s) => s.deleteCollection);
+
+  const bookmarks = useBibleBookmarksStore((s) => s.bookmarks);
+  const removeBookmark = useBibleBookmarksStore((s) => s.removeBookmark);
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
+
+  const bibleGrouped =
+    bookmarks.length > 20
+      ? (() => {
+          const groups: Record<string, typeof bookmarks> = {};
+          for (const bm of bookmarks) {
+            const key = bm.createdAt.slice(0, 7); // YYYY-MM
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(bm);
+          }
+          return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+        })()
+      : null;
 
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -45,11 +72,11 @@ export default function FavoritesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950" style={{ }}>
+    <View className="flex-1 bg-white dark:bg-slate-950" style={{}}>
       <View className="px-6 pb-4" style={{ paddingTop: insets.top + 12 }}>
         <Text className="text-[32px] font-extrabold tracking-tight text-text-primary dark:text-gray-100">Saved</Text>
         <Text className="text-[15px] font-medium text-text-secondary dark:text-gray-400 mt-1">
-          {favorites.length} favorites · {collections.length} collections
+          {favorites.length} favorites · {collections.length} collections{bookmarks.length > 0 ? ` · ${bookmarks.length} bookmarks` : ""}
         </Text>
       </View>
 
@@ -58,9 +85,7 @@ export default function FavoritesScreen() {
         showsVerticalScrollIndicator={false}
         data={[
           // Favorites section
-          ...(favorites.length > 0
-            ? [{ type: "header" as const, key: "fav-header", label: "Favorites", count: favorites.length }]
-            : []),
+          ...(favorites.length > 0 ? [{ type: "header" as const, key: "fav-header", label: "Favorites", count: favorites.length }] : []),
           ...favorites.map((item: any) => ({ type: "favorite" as const, key: `fav-${item.hymnId}`, ...item })),
 
           // Collections section header
@@ -71,14 +96,25 @@ export default function FavoritesScreen() {
 
           // Collections
           ...collections.map((col) => ({ type: "collection" as const, key: col.id, ...col })),
+
+          // Bible bookmarks
+          ...(bookmarks.length > 0
+            ? [
+                { type: "section" as const, key: "bible-header", label: "Bible Bookmarks" },
+                ...(bibleGrouped
+                  ? bibleGrouped.flatMap(([month, items]) => [
+                      { type: "bible-month" as const, key: `bm-month-${month}`, month, count: items.length },
+                      ...(expandedMonths.has(month) ? items.map((bm) => ({ type: "bible-bookmark" as const, key: bm.id, ...bm })) : []),
+                    ])
+                  : bookmarks.map((bm) => ({ type: "bible-bookmark" as const, key: bm.id, ...bm }))),
+              ]
+            : []),
         ]}
         ListEmptyComponent={
           <View className="items-center justify-center pt-20 gap-1">
             <Ionicons name="heart-outline" size={32} color={theme.textMuted} />
             <Text className="text-[15px] font-medium text-text-secondary dark:text-gray-400 mt-3">Nothing saved yet</Text>
-            <Text className="text-[13px] text-text-muted dark:text-gray-500 text-center mt-1">
-              Tap the heart while reading a hymn
-            </Text>
+            <Text className="text-[13px] text-text-muted dark:text-gray-500 text-center mt-1">Tap the heart while reading a hymn</Text>
           </View>
         }
         renderItem={({ item, index }: any) => {
@@ -116,15 +152,18 @@ export default function FavoritesScreen() {
                     <Pressable className="px-4 py-2.5 bg-primary rounded-xl" onPress={handleCreate}>
                       <Text className="text-sm font-semibold text-white">Create</Text>
                     </Pressable>
-                    <Pressable onPress={() => { setCreating(false); setNewName(""); }} hitSlop={8}>
+                    <Pressable
+                      onPress={() => {
+                        setCreating(false);
+                        setNewName("");
+                      }}
+                      hitSlop={8}
+                    >
                       <Ionicons name="close" size={18} color={theme.textMuted} />
                     </Pressable>
                   </View>
                 ) : (
-                  <Pressable
-                    className="flex-row items-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-gray-300 dark:border-slate-700"
-                    onPress={() => setCreating(true)}
-                  >
+                  <Pressable className="flex-row items-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-gray-300 dark:border-slate-700" onPress={() => setCreating(true)}>
                     <Ionicons name="add" size={18} color={theme.primary} />
                     <Text className="text-[15px] font-medium text-primary">New collection</Text>
                   </Pressable>
@@ -137,18 +176,15 @@ export default function FavoritesScreen() {
             const book = BOOKS.find((b) => b.id === item.bookId);
             const cover = book ? BOOK_COVERS[book.id] : null;
             return (
-              <Pressable
-                className="flex-row items-center gap-3 mb-2"
-                onPress={() => router.push({ pathname: "/hymn/[bookId]/[number]", params: { bookId: item.bookId, number: String(item.number) } })}
-              >
-                {cover ? (
-                  <Image source={cover} className="w-9 h-12 rounded-sm" resizeMode="cover" />
-                ) : (
-                  <View className="w-9 h-12 rounded-sm bg-gray-100 dark:bg-slate-800" />
-                )}
+              <Pressable className="flex-row items-center gap-3 mb-2" onPress={() => router.push({ pathname: "/hymn/[bookId]/[number]", params: { bookId: item.bookId, number: String(item.number) } })}>
+                {cover ? <Image source={cover} className="w-9 h-12 rounded-sm" resizeMode="cover" /> : <View className="w-9 h-12 rounded-sm bg-gray-100 dark:bg-slate-800" />}
                 <View className="flex-1">
-                  <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>{item.title}</Text>
-                  <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">{item.bookName} · #{item.number}</Text>
+                  <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">
+                    {item.bookName} · #{item.number}
+                  </Text>
                 </View>
                 <Pressable onPress={() => removeFavorite(item.hymnId)} hitSlop={8}>
                   <Ionicons name="close" size={14} color={theme.textMuted} />
@@ -157,12 +193,56 @@ export default function FavoritesScreen() {
             );
           }
 
+          if (item.type === "bible-month") {
+            const isOpen = expandedMonths.has(item.month);
+            const toggle = () =>
+              setExpandedMonths((prev) => {
+                const next = new Set(prev);
+
+                if (isOpen) next.delete(item.month);
+                else next.add(item.month);
+
+                return next;
+              });
+            return (
+              <Pressable className="flex-row items-center gap-3 py-3 px-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/20 mb-1" onPress={toggle}>
+                <Ionicons name={isOpen ? "chevron-down" : "chevron-forward"} size={16} color={theme.textMuted} />
+                <View className="flex-1">
+                  <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100">{monthLabel(item.month + "-01")}</Text>
+                </View>
+                <Text className="text-[13px] text-text-muted dark:text-gray-500">{item.count} bookmarks</Text>
+              </Pressable>
+            );
+          }
+
+          if (item.type === "bible-bookmark") {
+            return (
+              <Pressable className="flex-row items-start gap-3 py-2.5 px-3 rounded-xl mb-1 ml-4" onPress={() => router.push({ pathname: "/bible/[bookId]/[chapter]" as any, params: { bookId: String(item.bookId), chapter: String(item.chapter) } })}>
+                <View className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 items-center justify-center mt-0.5">
+                  <Ionicons name="bookmark" size={16} color="#B45309" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-[14px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
+                    {item.bookName} {item.chapter}:{item.verseStart}
+                    {item.verseEnd !== item.verseStart ? `-${item.verseEnd}` : ""}
+                  </Text>
+                  {item.note ? (
+                    <Text className="text-[12px] text-text-secondary dark:text-gray-400 mt-0.5" numberOfLines={2}>
+                      {item.note}
+                    </Text>
+                  ) : null}
+                  <Text className="text-[11px] text-text-muted dark:text-gray-500 mt-0.5">{relativeTime(item.createdAt)}</Text>
+                </View>
+                <Pressable onPress={() => removeBookmark(item.bookId, item.chapter, item.verseStart)} hitSlop={8}>
+                  <Ionicons name="close" size={14} color={theme.textMuted} />
+                </Pressable>
+              </Pressable>
+            );
+          }
+
           if (item.type === "collection") {
             return (
-              <Pressable
-                className="flex-row items-center gap-3 py-2.5 px-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 mb-2"
-                onPress={() => router.push({ pathname: "/collection/[id]", params: { id: item.id } })}
-              >
+              <Pressable className="flex-row items-center gap-3 py-2.5 px-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 mb-2" onPress={() => router.push({ pathname: "/collection/[id]", params: { id: item.id } })}>
                 <View className="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 items-center justify-center">
                   <Ionicons name="folder-outline" size={18} color={theme.primary} />
                 </View>
