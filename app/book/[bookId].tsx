@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
+import { BottomGlow, TopGlow } from "@/components/SoftGlow";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, PanResponder, Pressable, Text, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -83,15 +83,7 @@ export default function BookDetailScreen() {
       {/* Header — floating glass, scroll-responsive */}
       <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: jumpVisible ? 0 : 10 }}>
         {/* Tall seamless gradient — opaque behind header, imperceptibly fades to transparent */}
-        <Animated.View className="absolute left-0 right-0 top-0" style={{ height: headerHeight + 130, opacity: headerOpacity }} pointerEvents="none">
-          <LinearGradient
-            colors={isDark ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.85)", "rgba(15,23,42,0.4)", "rgba(15,23,42,0.06)", "transparent"] : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.82)", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.05)", "transparent"]}
-            locations={[0, 0.4, 0.62, 0.84, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            className="flex-1"
-          />
-        </Animated.View>
+        <TopGlow height={headerHeight + 130} opacity={headerOpacity} />
 
         {/* BlurView — only behind the header, fades in on scroll */}
         <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
@@ -160,20 +152,7 @@ export default function BookDetailScreen() {
         </Pressable>
       )}
 
-      {/* Bottom glow — fades from opaque at screen bottom to transparent above */}
-      <View className="absolute left-0 right-0 bottom-0 h-32" pointerEvents="none">
-        <LinearGradient
-          colors={
-            isDark
-                ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.55)", "rgba(15,23,42,0.06)", "transparent"]
-                : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.55)", "rgba(255,255,255,0.06)", "transparent"]
-          }
-          locations={[0, 0.45, 0.78, 1]}
-          start={{ x: 0, y: 1 }}
-          end={{ x: 0, y: 0 }}
-          className="flex-1"
-        />
-      </View>
+      <BottomGlow />
 
       {/* Quick-jump / Search Sheet */}
       <JumpSheet visible={jumpVisible} bookId={bookId!} bookName={info.name} maxNum={maxNum} onClose={handleJumpClose} />

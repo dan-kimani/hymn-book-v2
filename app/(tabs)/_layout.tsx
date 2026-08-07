@@ -9,6 +9,7 @@ import { theme } from "@/theme/colors";
 
 const TAB_ITEMS: Record<string, { icon: string; activeIcon: string; label: string }> = {
   index: { icon: "search-outline", activeIcon: "search", label: "Search" },
+  bible: { icon: "book-outline", activeIcon: "book", label: "Bible" },
   favorites: { icon: "heart-outline", activeIcon: "heart", label: "Saved" },
   settings: { icon: "settings-outline", activeIcon: "settings", label: "Settings" },
 };
@@ -19,7 +20,7 @@ export default function TabLayout() {
   const isDark = colorScheme === "dark";
 
   const barBg = isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.65)";
-  const barShadow = isDark ? "rgba(37,99,235,0.3)" : "rgba(148,163,184,0.22)";
+  const barShadow = isDark ? "rgba(249,115,22,0.3)" : "rgba(148,163,184,0.22)";
 
   return (
     <Tabs
@@ -95,6 +96,11 @@ export default function TabLayout() {
           return <Ionicons name={(focused ? item.activeIcon : item.icon) as any} size={21} color={focused ? theme.primary : theme.textMuted} />;
         },
       })}
-    />
+    >
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="bible" />
+      <Tabs.Screen name="favorites" />
+      <Tabs.Screen name="settings" />
+    </Tabs>
   );
 }

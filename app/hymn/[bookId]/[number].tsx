@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import * as Clipboard from "expo-clipboard";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
+import { BottomGlow, TopGlow } from "@/components/SoftGlow";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, Modal, PanResponder, Pressable, Share, Text, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -295,30 +295,17 @@ export default function HymnReaderScreen() {
       {/* Header — floating glass, scroll-responsive */}
       {/* zIndex lowered when jump sheet is open so bottom sheet overlays it */}
       <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: jumpVisible ? 0 : 10 }}>
-        <Animated.View className="absolute left-0 right-0 top-0" style={{ height: headerHeight + 140, opacity: headerOpacity }} pointerEvents="none">
-          <LinearGradient
-            colors={
-              isDark
-                ? // Colors
-                  ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.85)", "rgba(15,23,42,0.4)", "rgba(15,23,42,0.06)", "transparent"]
-                : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.82)", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.05)", "transparent"]
-            }
-            locations={[0, 0.4, 0.62, 0.84, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            className="flex-1"
-          />
-        </Animated.View>
+        <TopGlow height={headerHeight + 140} opacity={headerOpacity} />
         <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
         <View className="flex-row items-start px-4 pb-3.5 gap-3">
           <Pressable onPress={() => router.back()} hitSlop={8} className="pt-0.5">
-            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+            <Ionicons name="chevron-back" size={24} color={isDark ? "#E2E8F0" : theme.textPrimary} />
           </Pressable>
           <View className="flex-1">
-            <Text className={`text-sm font-bold uppercase tracking-wide ${accent}`}>{bookName}</Text>
-            <Text className="text-[13px] text-text-secondary dark:text-gray-400 mt-0.5">Hymn No. {number}</Text>
+            <Text className={`text-sm font-bold uppercase tracking-wide ${accent} dark:text-gray-100`}>{bookName}</Text>
+            <Text className="text-[13px] text-text-muted dark:text-gray-400 mt-0.5">Hymn No. {number}</Text>
           </View>
           <Pressable onPress={() => toggleFavorite({ hymnId, bookId: bookId!, bookName, number: currentNum, title: hymn?.title ?? "" })} hitSlop={8} className="pt-0.5">
             <Ionicons name={isFav ? "heart" : "heart-outline"} size={22} color={isFav ? theme.favorite : theme.textMuted} />
@@ -457,26 +444,14 @@ export default function HymnReaderScreen() {
       )}
 
       {/* Bottom glow — fades from opaque at screen bottom to transparent above */}
-      <View className="absolute left-0 right-0 bottom-0 h-32" pointerEvents="none">
-        <LinearGradient
-          colors={
-            isDark
-              ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.55)", "rgba(15,23,42,0.06)", "transparent"]
-              : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.55)", "rgba(255,255,255,0.06)", "transparent"]
-          }
-          locations={[0, 0.45, 0.78, 1]}
-          start={{ x: 0, y: 1 }}
-          end={{ x: 0, y: 0 }}
-          className="flex-1"
-        />
-      </View>
+      <BottomGlow />
 
       {/* Font controls — independent floating pill */}
       <View
         className="absolute left-4 flex-row items-center px-2.5 py-2 rounded-2xl gap-1.5 overflow-hidden"
         style={{
           bottom: 20,
-          shadowColor: isDark ? "rgba(37,99,235,0.2)" : "rgba(148,163,184,0.15)",
+          shadowColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(148,163,184,0.15)",
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 1,
           shadowRadius: 12,
@@ -501,7 +476,7 @@ export default function HymnReaderScreen() {
         className="absolute right-4 rounded-2xl overflow-hidden"
         style={{
           bottom: 20,
-          shadowColor: isDark ? "rgba(37,99,235,0.2)" : "rgba(148,163,184,0.15)",
+          shadowColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(148,163,184,0.15)",
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 1,
           shadowRadius: 12,
