@@ -18,12 +18,11 @@ export default function SettingsScreen() {
   const setThemeMode = useSettingsStore((s) => s.setThemeMode);
   const readingFont = useSettingsStore((s) => s.readingFont);
   const setReadingFont = useSettingsStore((s) => s.setReadingFont);
-  const setReadingMode = useSettingsStore((s) => s.setReadingMode);
   const searchBooks = useSettingsStore((s) => s.searchBooks);
   const toggleSearchBook = useSettingsStore((s) => s.toggleSearchBook);
 
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950" style={{ }}>
+    <View className="flex-1 bg-white dark:bg-slate-950" style={{}}>
       <View className="px-6 pb-4" style={{ paddingTop: insets.top + 12 }}>
         <Text className="text-[32px] font-extrabold tracking-tight text-text-primary dark:text-gray-100">Settings</Text>
       </View>
@@ -51,12 +50,7 @@ export default function SettingsScreen() {
               <Text className="text-[15px] font-medium text-text-primary dark:text-gray-100">Serif font</Text>
               <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">Literata typeface for reading</Text>
             </View>
-            <Switch
-              value={readingFont === "serif"}
-              onValueChange={(v) => setReadingFont(v ? "serif" : "sans")}
-              trackColor={{ false: theme.border, true: theme.primaryLight }}
-              thumbColor={readingFont === "serif" ? theme.primary : theme.textMuted}
-            />
+            <Switch value={readingFont === "serif"} onValueChange={(v) => setReadingFont(v ? "serif" : "sans")} trackColor={{ false: theme.border, true: theme.primaryLight }} thumbColor={readingFont === "serif" ? theme.primary : theme.textMuted} />
           </View>
         </View>
 
