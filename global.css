@@ -2,10 +2,10 @@
 @import "uniwind";
 
 @theme {
-  --color-primary: #2563EB;
-  --color-primary-deep: #1E40AF;
-  --color-primary-light: #3B82F6;
-  --color-primary-tint: #DBEAFE;
+  --color-primary: #F97316;
+  --color-primary-deep: #EA580C;
+  --color-primary-light: #FB923C;
+  --color-primary-tint: #FFF7ED;
 
   --color-surface: #F6F8FC;
   --color-surface-alt: #EEF2F9;

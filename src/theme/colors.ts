@@ -1,10 +1,10 @@
 // Theme color constants — mirrors global.css @theme tokens.
 // Use these for props that require hex strings (e.g. Ionicons color).
 export const theme = {
-  primary: "#2563EB",
-  primaryDeep: "#1E40AF",
-  primaryLight: "#3B82F6",
-  primaryTint: "#DBEAFE",
+  primary: "#F97316",
+  primaryDeep: "#EA580C",
+  primaryLight: "#FB923C",
+  primaryTint: "#FFF7ED",
   surface: "#F6F8FC",
   surfaceAlt: "#EEF2F9",
   textPrimary: "#0B1220",
