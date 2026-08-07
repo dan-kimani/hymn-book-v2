@@ -282,8 +282,7 @@ def build():
             number INTEGER NOT NULL,
             title TEXT NOT NULL,
             first_line TEXT NOT NULL,
-            verses_json TEXT NOT NULL,
-            search_text TEXT NOT NULL
+            verses_json TEXT NOT NULL
         );
 
         CREATE INDEX idx_hymns_book ON hymns(book_id);
@@ -298,23 +297,15 @@ def build():
             hymn_title TEXT NOT NULL,
             verse_number INTEGER NOT NULL,
             stanza_index INTEGER NOT NULL,
-            stanza_text TEXT NOT NULL,
-            search_text TEXT NOT NULL
+            stanza_text TEXT NOT NULL
         );
 
-        -- FTS5 virtual table over stanzas
+        -- FTS5 virtual table over stanzas (rebuilt at runtime)
         CREATE VIRTUAL TABLE stanzas_fts USING fts5(
-            hymn_id,
-            book_id,
-            book_name,
-            hymn_number,
-            hymn_title,
-            verse_number,
-            stanza_index,
             stanza_text,
-            search_text,
             content=stanzas_content,
-            content_rowid=rowid
+            content_rowid=rowid,
+            tokenize='unicode61'
         );
 
         -- Metadata
@@ -367,13 +358,11 @@ def build():
 
             # Full search text (diacritic-folded for Kikuyu)
             verses_json = json.dumps(parsed["verses"], ensure_ascii=False)
-            search_text = normalize_search(raw)
-
             conn.execute(
-                """INSERT INTO hymns (id, book_id, number, title, first_line, verses_json, search_text)
-                   VALUES (?,?,?,?,?,?,?)""",
+                """INSERT INTO hymns (id, book_id, number, title, first_line, verses_json)
+                   VALUES (?,?,?,?,?,?)""",
                 (hymn_id, book["id"], hymn_number, parsed["title"],
-                 parsed["first_line"], verses_json, search_text)
+                 parsed["first_line"], verses_json)
             )
 
             # Index each stanza individually
@@ -383,16 +372,14 @@ def build():
                     if not stanza:
                         continue
                     stanza_text = '\n'.join(stanza)
-                    stanza_search = normalize_search(stanza_text)
-
                     conn.execute(
                         """INSERT INTO stanzas_content
                            (hymn_id, book_id, book_name, hymn_number, hymn_title,
-                            verse_number, stanza_index, stanza_text, search_text)
-                           VALUES (?,?,?,?,?,?,?,?,?)""",
+                            verse_number, stanza_index, stanza_text)
+                           VALUES (?,?,?,?,?,?,?,?)""",
                         (hymn_id, book["id"], book["name"], hymn_number,
                          parsed["title"], verse["number"], si,
-                         stanza_text, stanza_search)
+                         stanza_text)
                     )
                     stanza_index_global += 1
                     total_stanzas += 1
@@ -405,14 +392,14 @@ def build():
 
     # Populate FTS index
     print(f"Building FTS5 index over {total_stanzas} stanzas...")
-    conn.execute(
-        "INSERT INTO stanzas_fts(stanzas_fts) VALUES('rebuild')"
-    )
+    conn.execute("INSERT INTO stanzas_fts(stanzas_fts) VALUES('rebuild')")
+    conn.commit()
+    print("FTS index ready")
 
     # Write metadata
     conn.execute(
         "INSERT INTO meta (key, value) VALUES (?, ?)",
-        ("data_version", "1")
+        ("data_version_v2", "1")
     )
     conn.execute(
         "INSERT INTO meta (key, value) VALUES (?, ?)",
@@ -463,6 +450,10 @@ def build():
     else:
         print(f"\n✓ All checks passed — {total_hymns} hymns, {total_stanzas} stanzas")
 
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    conn.execute("PRAGMA journal_mode=DELETE")
+    conn.execute("PRAGMA page_size = 4096")
+    conn.execute("VACUUM")
     conn.close()
 
     db_size = os.path.getsize(DB_PATH)
