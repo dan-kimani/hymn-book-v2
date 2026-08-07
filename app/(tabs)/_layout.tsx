@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { Tabs } from "expo-router";
-import { Text, useColorScheme } from "react-native";
+import { Text, useColorScheme, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { theme } from "@/theme/colors";
 
 const TAB_ITEMS: Record<string, { icon: string; activeIcon: string; label: string }> = {
   index: { icon: "search-outline", activeIcon: "search", label: "Search" },
-  books: { icon: "library-outline", activeIcon: "library", label: "Books" },
   favorites: { icon: "heart-outline", activeIcon: "heart", label: "Saved" },
   settings: { icon: "settings-outline", activeIcon: "settings", label: "Settings" },
 };
@@ -17,6 +17,9 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  const barBg = isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.65)";
+  const barShadow = isDark ? "rgba(37,99,235,0.3)" : "rgba(148,163,184,0.22)";
 
   return (
     <Tabs
@@ -30,10 +33,10 @@ export default function TabLayout() {
           left: 24,
           right: 24,
           borderRadius: 32,
-          backgroundColor: isDark ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.6)",
+          backgroundColor: barBg,
           borderTopWidth: 0,
           elevation: 0,
-          shadowColor: isDark ? "rgba(37,99,235,0.3)" : "rgba(148,163,184,0.22)",
+          shadowColor: barShadow,
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 1,
           shadowRadius: 14,
@@ -50,15 +53,32 @@ export default function TabLayout() {
           paddingBottom: 0,
         },
         tabBarBackground: () => (
-          <BlurView
-            intensity={isDark ? 30 : 25}
-            tint={isDark ? "dark" : "light"}
-            style={{
-              flex: 1,
-              borderRadius: 32,
-              overflow: "hidden",
-            }}
-          />
+          <View style={{ flex: 1 }}>
+            {/* Bottom-to-top glow — fades from opaque at screen bottom to transparent above tabs */}
+            <LinearGradient
+              colors={
+                isDark
+                  ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.6)", "rgba(15,23,42,0.12)", "transparent"]
+                  : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.1)", "transparent"]
+              }
+              locations={[0, 0.35, 0.7, 1]}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 0, y: 0 }}
+              style={{
+                position: "absolute",
+                left: -24,
+                right: -24,
+                bottom: -10 - insets.bottom,
+                height: 140,
+              }}
+              pointerEvents="none"
+            />
+            <BlurView
+              intensity={30}
+              tint={isDark ? "dark" : "light"}
+              style={{ flex: 1, borderRadius: 32, overflow: "hidden" }}
+            />
+          </View>
         ),
         tabBarLabelStyle: {
           marginTop: 4,

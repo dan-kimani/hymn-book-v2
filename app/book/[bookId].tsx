@@ -160,6 +160,21 @@ export default function BookDetailScreen() {
         </Pressable>
       )}
 
+      {/* Bottom glow — fades from opaque at screen bottom to transparent above */}
+      <View className="absolute left-0 right-0 bottom-0 h-32" pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+                ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.55)", "rgba(15,23,42,0.06)", "transparent"]
+                : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.55)", "rgba(255,255,255,0.06)", "transparent"]
+          }
+          locations={[0, 0.45, 0.78, 1]}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 0, y: 0 }}
+          className="flex-1"
+        />
+      </View>
+
       {/* Quick-jump / Search Sheet */}
       <JumpSheet visible={jumpVisible} bookId={bookId!} bookName={info.name} maxNum={maxNum} onClose={handleJumpClose} />
     </Animated.View>

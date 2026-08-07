@@ -4,7 +4,7 @@ import * as Clipboard from "expo-clipboard";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, PanResponder, Pressable, Share, Text, View, useColorScheme } from "react-native";
+import { Animated, Dimensions, Modal, PanResponder, Pressable, Share, Text, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { JumpSheet } from "@/components/search/JumpSheet";
@@ -13,6 +13,7 @@ import type { Hymn } from "@/data/types";
 import { usePlayback, useRecorder } from "@/hooks/useRecorder";
 import { useFavoritesStore } from "@/state/favoritesStore";
 import { useRecentsStore } from "@/state/recentsStore";
+import { useCollectionsStore } from "@/state/collectionsStore";
 import { useRecordingsStore } from "@/state/recordingsStore";
 import { useSettingsStore } from "@/state/settingsStore";
 import { theme } from "@/theme/colors";
@@ -40,17 +41,7 @@ const BOOK_COUNTS: Record<string, number> = {
 
 export default function HymnReaderScreen() {
   const insets = useSafeAreaInsets();
-  const {
-    bookId,
-    number,
-    verse: targetVerse,
-    stanza: targetStanza,
-  } = useLocalSearchParams<{
-    bookId: string;
-    number: string;
-    verse?: string;
-    stanza?: string;
-  }>();
+  const { bookId, number, verse: targetVerse, stanza: targetStanza } = useLocalSearchParams<{ bookId: string; number: string; verse?: string; stanza?: string }>();
   const fontSize = useSettingsStore((s) => s.fontSize);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
   const [hymn, setHymn] = useState<Hymn | null>(null);
@@ -63,6 +54,11 @@ export default function HymnReaderScreen() {
   const slideX = useRef(new Animated.Value(0)).current;
   // Quick-jump / search sheet
   const [jumpVisible, setJumpVisible] = useState(false);
+
+  // Add to collection
+  const [collectionPickerVisible, setCollectionPickerVisible] = useState(false);
+  const collections = useCollectionsStore((s) => s.collections);
+  const addToCollection = useCollectionsStore((s) => s.addToCollection);
 
   // Copied feedback
   const [copied, setCopied] = useState(false);
@@ -301,7 +297,12 @@ export default function HymnReaderScreen() {
       <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: jumpVisible ? 0 : 10 }}>
         <Animated.View className="absolute left-0 right-0 top-0" style={{ height: headerHeight + 140, opacity: headerOpacity }} pointerEvents="none">
           <LinearGradient
-            colors={isDark ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.85)", "rgba(15,23,42,0.4)", "rgba(15,23,42,0.06)", "transparent"] : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.82)", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.05)", "transparent"]}
+            colors={
+              isDark
+                ? // Colors
+                  ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.85)", "rgba(15,23,42,0.4)", "rgba(15,23,42,0.06)", "transparent"]
+                : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.82)", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.05)", "transparent"]
+            }
             locations={[0, 0.4, 0.62, 0.84, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
@@ -455,6 +456,21 @@ export default function HymnReaderScreen() {
         </View>
       )}
 
+      {/* Bottom glow — fades from opaque at screen bottom to transparent above */}
+      <View className="absolute left-0 right-0 bottom-0 h-32" pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.55)", "rgba(15,23,42,0.06)", "transparent"]
+              : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.55)", "rgba(255,255,255,0.06)", "transparent"]
+          }
+          locations={[0, 0.45, 0.78, 1]}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 0, y: 0 }}
+          className="flex-1"
+        />
+      </View>
+
       {/* Font controls — independent floating pill */}
       <View
         className="absolute left-4 flex-row items-center px-2.5 py-2 rounded-2xl gap-1.5 overflow-hidden"
@@ -512,7 +528,54 @@ export default function HymnReaderScreen() {
         <Pressable className="w-10 h-10 items-center justify-center" onPress={handleShare}>
           <Ionicons name="share-outline" size={18} color={theme.textMuted} />
         </Pressable>
+        <View className="h-px bg-gray-200/40 dark:bg-slate-700/40 mx-3" />
+        <Pressable className="w-10 h-10 items-center justify-center" onPress={() => setCollectionPickerVisible(true)}>
+          <Ionicons name="folder-outline" size={18} color={theme.textMuted} />
+        </Pressable>
       </View>
+
+      {/* Collection picker modal */}
+      <Modal visible={collectionPickerVisible} transparent animationType="fade" onRequestClose={() => setCollectionPickerVisible(false)}>
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setCollectionPickerVisible(false)}>
+          <Pressable className="rounded-t-2xl bg-white dark:bg-slate-900 px-5 pt-4 pb-8" onPress={() => {}}>
+            <View className="items-center mb-4">
+              <View className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
+            </View>
+            <Text className="text-[17px] font-bold text-text-primary dark:text-gray-100 mb-4">Add to collection</Text>
+            {collections.length === 0 ? (
+              <Text className="text-[13px] text-text-muted dark:text-gray-500 py-4">No collections yet. Create one in Saved.</Text>
+            ) : (
+              collections.map((col) => {
+                const added = col.hymns.some((h) => h.hymnId === hymnId);
+                return (
+                  <Pressable
+                    key={col.id}
+                    className={`flex-row items-center gap-3 py-3 border-b border-gray-100/60 dark:border-slate-800/60 ${added ? "opacity-50" : ""}`}
+                    onPress={() => {
+                      if (!added) {
+                        addToCollection(col.id, {
+                          hymnId,
+                          bookId: bookId!,
+                          number: currentNum,
+                          title: hymn?.title ?? "",
+                          bookName,
+                        });
+                      }
+                      setCollectionPickerVisible(false);
+                    }}
+                  >
+                    <Ionicons name={added ? "checkmark-circle" : "folder-outline"} size={20} color={added ? theme.primary : theme.textMuted} />
+                    <View className="flex-1">
+                      <Text className="text-[15px] font-medium text-text-primary dark:text-gray-100">{col.name}</Text>
+                      <Text className="text-[12px] text-text-muted dark:text-gray-500">{col.hymns.length} hymns</Text>
+                    </View>
+                  </Pressable>
+                );
+              })
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Quick-jump / Search Sheet */}
       <JumpSheet visible={jumpVisible} bookId={bookId!} bookName={bookName} maxNum={maxNum} onClose={handleJumpClose} />

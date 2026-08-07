@@ -22,7 +22,8 @@
         "backgroundColor": "#122648"
       },
       "package": "app.frame.gikuyuhymns",
-      "permissions": ["RECORD_AUDIO"]
+      "permissions": ["RECORD_AUDIO"],
+      "allowBackup": true
     },
     "plugins": [
       "expo-router",

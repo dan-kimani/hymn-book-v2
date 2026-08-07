@@ -3,54 +3,17 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Pressable, Text, TextInput, useColorScheme, View } from "react-native";
+import { Animated, Image, Pressable, Text, TextInput, useColorScheme, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PressableScale } from "@/components/common/PressableScale";
 import { SearchResultRow } from "@/components/search/SearchResultRow";
 import { fetchDailyHymn, searchByNumber, searchStanzas } from "@/data/queries";
-import type { BookId, StanzaResult } from "@/data/types";
+import type { StanzaResult } from "@/data/types";
 import { useRecentsStore } from "@/state/recentsStore";
+import { useSettingsStore } from "@/state/settingsStore";
 import { theme } from "@/theme/colors";
-
-// ── Data ────────────────────────────────────────────────────
-
-const BOOKS = [
-  {
-    id: "roho-mutheru" as BookId,
-    name: "Nyimbo Cia Roho Mutheru",
-    shortName: "Roho Mutheru",
-    count: 555,
-    color: theme.bookRohoMutheru,
-    desc: "Hymns of the Holy Spirit",
-  },
-  {
-    id: "atumwo" as BookId,
-    name: "Nyimbo Cia Atumwo",
-    shortName: "Atumwo",
-    count: 218,
-    color: theme.bookAtumwo,
-    desc: "Hymns of the Apostles",
-  },
-  {
-    id: "kiroho" as BookId,
-    name: "Nyimbo Cia Kiroho",
-    shortName: "Kiroho",
-    count: 464,
-    color: theme.bookKiroho,
-    desc: "Spiritual Hymns",
-  },
-  {
-    id: "golden-bells" as BookId,
-    name: "Golden Bells",
-    shortName: "Golden Bells",
-    count: 771,
-    color: theme.bookGoldenBells,
-    desc: "English Hymnal",
-  },
-];
-
-// ── Component ──────────────────────────────────────────────
+import { BOOK_COVERS, BOOKS } from "@/utils/constants";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -60,6 +23,9 @@ export default function HomeScreen() {
   const [focused, setFocused] = useState(false);
   const recents = useRecentsStore((s) => s.recents);
   const removeRecent = useRecentsStore((s) => s.removeRecent);
+  const searchBooks = useSettingsStore((s) => s.searchBooks);
+  // null = search all; when all 4 are on, treat as search-all for broader results
+  const searchScope = searchBooks.length === 4 ? null : searchBooks;
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const colorScheme = useColorScheme();
@@ -80,7 +46,7 @@ export default function HomeScreen() {
       setSearching(true);
       const num = query.match(/^#?(\d{1,4})$/);
       if (num) {
-        const r = await searchByNumber(parseInt(num[1]));
+        const r = await searchByNumber(parseInt(num[1]), searchScope);
         if (r.length > 0) {
           setResults(
             r.map((x) => ({
@@ -98,7 +64,7 @@ export default function HomeScreen() {
           return;
         }
       }
-      setResults(await searchStanzas(query, null, 40));
+      setResults(await searchStanzas(query, searchScope, 40));
     }, 200);
     return () => clearTimeout(timer);
   }, [query]);
@@ -122,7 +88,7 @@ export default function HomeScreen() {
   const onScroll = Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false });
 
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950">
+    <View className="flex-1 bg-white dark:bg-slate-950" style={{ }}>
       {/* ── Floating search bar ─────────────────────────────── */}
       <Animated.View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
         {/* Tall seamless gradient — opaque behind search, imperceptibly fades to transparent */}
@@ -191,17 +157,6 @@ export default function HomeScreen() {
         />
       ) : (
         <Animated.ScrollView className="flex-1" contentContainerStyle={{ paddingTop: insets.top + 72, paddingBottom: 120 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" onScroll={onScroll} scrollEventThrottle={16}>
-          {/* Subtle top-of-page color wash */}
-          <View className="absolute top-0 left-0 right-0 h-64" pointerEvents="none" style={{ marginTop: -insets.top - 72 }}>
-            <LinearGradient
-              colors={isDark ? ["rgba(37,99,235,0.06)", "rgba(124,58,237,0.03)", "transparent"] : ["rgba(37,99,235,0.04)", "rgba(124,58,237,0.02)", "transparent"]}
-              locations={[0, 0.5, 1]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              className="flex-1"
-            />
-          </View>
-
           {empty && (
             <View className="items-center justify-center py-24 gap-2">
               <Ionicons name="search-outline" size={36} color={theme.textMuted} />
@@ -238,31 +193,31 @@ export default function HomeScreen() {
           {/* ── Recent Hymns ── */}
           {recents.length > 0 && idle && (
             <View className="mb-8">
-              <View className="flex-row items-center justify-between mx-5 mb-3">
-                <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500">Recent</Text>
+              <View className="flex-row items-end justify-between mx-5 mb-3">
+                <Text className="text-base font-bold text-text-primary dark:text-gray-100">Recently opened</Text>
                 <Pressable onPress={() => useRecentsStore.getState().clearRecents()} hitSlop={8}>
-                  <Text className="text-xs font-medium text-text-muted dark:text-gray-500">Clear all</Text>
+                  <Text className="text-[13px] text-text-muted dark:text-gray-500">Clear</Text>
                 </Pressable>
               </View>
-              <View className="mx-5 rounded-xl overflow-hidden border border-gray-100 dark:border-slate-800">
-                {recents.slice(0, 5).map((item, i) => {
+              <View className="mx-5 gap-2">
+                {recents.slice(0, 5).map((item) => {
                   const book = BOOKS.find((b) => b.id === item.bookId);
+                  const cover = book ? BOOK_COVERS[book.id] : null;
                   return (
-                    <View key={item.hymnId} className={`flex-row items-center bg-white dark:bg-slate-900 ${i < Math.min(recents.length, 5) - 1 ? "border-b border-gray-50 dark:border-slate-800" : ""}`}>
-                      <PressableScale className="flex-1 flex-row items-center pl-4 py-3.5 gap-3" onPress={() => openHymn(item.bookId, item.number)}>
-                        <View className="w-2 h-2 rounded-full" style={{ backgroundColor: book?.color ?? theme.primary }} />
-                        <View className="flex-1">
-                          <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
-                            {item.title}
-                          </Text>
-                          <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">{item.bookName}</Text>
-                        </View>
-                        <Text className="text-[13px] font-medium text-text-muted dark:text-gray-400">#{item.number}</Text>
-                      </PressableScale>
-                      <Pressable onPress={() => removeRecent(item.hymnId)} hitSlop={8} className="pr-4 pl-1 py-3.5">
-                        <Ionicons name="close" size={15} color={theme.textMuted} />
+                    <PressableScale key={item.hymnId} className="flex-row items-center gap-3" onPress={() => openHymn(item.bookId, item.number)}>
+                      {cover ? <Image source={cover} className="w-9 h-12 rounded-sm" resizeMode="cover" /> : <View className="w-9 h-12 rounded-sm" style={{ backgroundColor: (book?.color ?? theme.primary) + "20" }} />}
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
+                          {item.title}
+                        </Text>
+                        <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">
+                          {item.bookName} · #{item.number}
+                        </Text>
+                      </View>
+                      <Pressable onPress={() => removeRecent(item.hymnId)} hitSlop={8}>
+                        <Ionicons name="close" size={14} color={theme.textMuted} />
                       </Pressable>
-                    </View>
+                    </PressableScale>
                   );
                 })}
               </View>
@@ -272,21 +227,17 @@ export default function HomeScreen() {
           {/* ── Hymn Collections ── */}
           {idle && (
             <View className="mb-8">
-              <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 ml-5 mb-3">Collections</Text>
+              <Text className="text-base font-bold text-text-primary dark:text-gray-100 mx-5 mb-3">Books</Text>
               <View className="mx-5 gap-2.5">
                 {BOOKS.map((book) => (
                   <PressableScale key={book.id} onPress={() => router.push({ pathname: "/book/[bookId]", params: { bookId: book.id } })}>
                     <View className="flex-row items-center rounded-xl px-4 py-4 border border-gray-100 dark:border-slate-800" style={{ backgroundColor: isDark ? `${book.color}0D` : `${book.color}08` }}>
-                      <View className="w-11 h-11 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: book.color + "18" }}>
-                        <Text className="text-[17px] font-bold" style={{ color: book.color }}>
-                          {book.shortName.charAt(0)}
-                        </Text>
-                      </View>
+                      <Image source={BOOK_COVERS[book.id]} className="w-12 h-16 rounded-md mr-4" resizeMode="cover" />
                       <View className="flex-1">
                         <Text className="text-[16px] font-semibold text-text-primary dark:text-gray-100">{book.name}</Text>
                         <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">{book.desc}</Text>
                         <Text className="text-[11px] font-medium text-text-muted dark:text-gray-500 mt-1.5">
-                          {book.count} hymns · {book.id === "golden-bells" ? "English" : "Kikuyu"}
+                          {book.count} hymns · {book.language}
                         </Text>
                       </View>
                       <Ionicons name="chevron-forward" size={16} color={theme.textMuted} />
@@ -297,22 +248,7 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* ── Quick tip ── */}
-          {!recents.length && idle && (
-            <View className="mx-5 mb-8">
-              <View className="flex-row items-start gap-3">
-                <View className="w-9 h-9 rounded-lg bg-primary/8 dark:bg-primary/15 items-center justify-center mt-0.5">
-                  <Ionicons name="bulb-outline" size={16} color={theme.primary} />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-[13px] font-semibold text-text-primary dark:text-gray-100 mb-0.5">Quick tip</Text>
-                  <Text className="text-[13px] text-text-secondary dark:text-gray-400 leading-relaxed">
-                    Type <Text className="font-semibold text-primary">#42</Text> to jump to a hymn number, or search by any phrase from the lyrics.
-                  </Text>
-                </View>
-              </View>
-            </View>
-          )}
+          {/* The search bar placeholder already teaches the user how to search */}
         </Animated.ScrollView>
       )}
     </View>

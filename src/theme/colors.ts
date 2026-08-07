@@ -14,8 +14,8 @@ export const theme = {
   borderLight: "#EEF1F6",
   favorite: "#F43F5E",
   danger: "#EF4444",
-  bookRohoMutheru: "#2563EB",
-  bookAtumwo: "#7C3AED",
-  bookKiroho: "#059669",
-  bookGoldenBells: "#DC2626",
+  bookRohoMutheru: "#2A1E37",
+  bookAtumwo: "#42613F",
+  bookKiroho: "#2C5D1A",
+  bookGoldenBells: "#2F6BA9",
 } as const;
