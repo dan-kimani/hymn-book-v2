@@ -3,8 +3,9 @@ import { BlurView } from "expo-blur";
 import * as Clipboard from "expo-clipboard";
 import { router, useLocalSearchParams } from "expo-router";
 import { BottomGlow, TopGlow } from "@/components/SoftGlow";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, Modal, PanResponder, Pressable, Share, Text, View, useColorScheme } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Text } from "@/components/common/Text";
+import { Animated, Modal, Pressable, Share, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { JumpSheet } from "@/components/search/JumpSheet";
@@ -15,7 +16,12 @@ import { useFavoritesStore } from "@/state/favoritesStore";
 import { useRecentsStore } from "@/state/recentsStore";
 import { useCollectionsStore } from "@/state/collectionsStore";
 import { useRecordingsStore } from "@/state/recordingsStore";
-import { useSettingsStore } from "@/state/settingsStore";
+import { useFontScale } from "@/hooks/useFontScale";
+import { FontSizePill } from "@/components/common/FontSizePill";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
+import { useIsDark } from "@/hooks/useIsDark";
+import { useHorizontalSwipeNav } from "@/hooks/useHorizontalSwipeNav";
+import { HymnShimmer } from "@/components/hymn/HymnShimmer";
 import { theme } from "@/theme/colors";
 
 const BOOK_NAMES: Record<string, string> = {
@@ -42,16 +48,12 @@ const BOOK_COUNTS: Record<string, number> = {
 export default function HymnReaderScreen() {
   const insets = useSafeAreaInsets();
   const { bookId, number, verse: targetVerse, stanza: targetStanza } = useLocalSearchParams<{ bookId: string; number: string; verse?: string; stanza?: string }>();
-  const fontSize = useSettingsStore((s) => s.fontSize);
-  const setFontSize = useSettingsStore((s) => s.setFontSize);
+  const { fontSize, heading, caption } = useFontScale();
   const [hymn, setHymn] = useState<Hymn | null>(null);
   const scrollRef = useRef<any>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const isDark = useIsDark();
 
-  // Swipe state
-  const slideX = useRef(new Animated.Value(0)).current;
   // Quick-jump / search sheet
   const [jumpVisible, setJumpVisible] = useState(false);
 
@@ -153,19 +155,17 @@ export default function HymnReaderScreen() {
   const verseYs = useRef<Record<number, number>>({});
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const data = await fetchHymn(hymnId);
-      if (data) {
+      if (!cancelled && data) {
         setHymn(data);
-        addRecent({
-          hymnId,
-          bookId: bookId!,
-          bookName,
-          number: currentNum,
-          title: data.title,
-        });
+        addRecent({ hymnId, bookId: bookId!, bookName, number: currentNum, title: data.title });
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [hymnId]);
 
   // Auto-scroll to matched verse from search
@@ -184,69 +184,17 @@ export default function HymnReaderScreen() {
 
   const goToHymn = (num: number) => {
     if (num < 1 || num > maxNum) return;
-    router.replace({ pathname: "/hymn/[bookId]/[number]", params: { bookId: bookId!, number: String(num) } });
+    scrollRef.current?.scrollTo?.({ y: 0, animated: false });
+    setHymn(null);
+    router.setParams({ bookId: bookId!, number: String(num), verse: "", stanza: "" });
   };
 
-  // ── Swipe + Edge-back (PanResponder) ──────────────────────
-  const touchStartX = useRef(0);
-  const SCREEN_W = Dimensions.get("window").width;
-  const EDGE = 30;
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gs) => {
-          // Edge swipe-back: started from left edge, moving right
-          if (touchStartX.current < EDGE && gs.dx > 15 && gs.dx > Math.abs(gs.dy) * 0.8) return true;
-          // Hymn navigation: horizontal swipe from main area
-          return Math.abs(gs.dx) > 20 && Math.abs(gs.dx) > Math.abs(gs.dy) * 1.2;
-        },
-        onPanResponderGrant: (e) => {
-          touchStartX.current = e.nativeEvent.pageX;
-        },
-        onPanResponderMove: (_, gs) => {
-          slideX.setValue(gs.dx);
-        },
-        onPanResponderRelease: (_, gs) => {
-          // Edge-swipe-back
-          if (touchStartX.current < EDGE && gs.dx > 80) {
-            Animated.timing(slideX, {
-              toValue: SCREEN_W,
-              duration: 200,
-              useNativeDriver: true,
-            }).start(() => {
-              slideX.setValue(0);
-              router.back();
-            });
-            return;
-          }
-          // Hymn navigation
-          const threshold = 80;
-          if (gs.dx > threshold && currentNum > 1) {
-            Animated.timing(slideX, {
-              toValue: 400,
-              duration: 200,
-              useNativeDriver: true,
-            }).start(() => {
-              slideX.setValue(0);
-              goToHymn(currentNum - 1);
-            });
-          } else if (gs.dx < -threshold && currentNum < maxNum) {
-            Animated.timing(slideX, {
-              toValue: -400,
-              duration: 200,
-              useNativeDriver: true,
-            }).start(() => {
-              slideX.setValue(0);
-              goToHymn(currentNum + 1);
-            });
-          } else {
-            Animated.spring(slideX, { toValue: 0, useNativeDriver: true }).start();
-          }
-        },
-      }),
-    [currentNum, maxNum, goToHymn],
-  );
+  const panResponder = useHorizontalSwipeNav({
+    current: currentNum,
+    max: maxNum,
+    onPrev: () => goToHymn(currentNum - 1),
+    onNext: () => goToHymn(currentNum + 1),
+  });
 
   const lineHeight = fontSize * 1.7;
   const verseGap = fontSize * 1.3;
@@ -293,20 +241,31 @@ export default function HymnReaderScreen() {
       )}
 
       {/* Header — floating glass, scroll-responsive */}
-      {/* zIndex lowered when jump sheet is open so bottom sheet overlays it */}
-      <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: jumpVisible ? 0 : 10 }}>
+      <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
         <TopGlow height={headerHeight + 140} opacity={headerOpacity} />
         <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
         <View className="flex-row items-start px-4 pb-3.5 gap-3">
           <Pressable onPress={() => router.back()} hitSlop={8} className="pt-0.5">
-            <Ionicons name="chevron-back" size={24} color={isDark ? "#E2E8F0" : theme.textPrimary} />
+            <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
           </Pressable>
           <View className="flex-1">
-            <Text className={`text-sm font-bold uppercase tracking-wide ${accent} dark:text-gray-100`}>{bookName}</Text>
-            <Text className="text-[13px] text-text-muted dark:text-gray-400 mt-0.5">Hymn No. {number}</Text>
+            <Text className={`font-semibold tracking-wide ${accent} dark:text-gray-100 line-clamp-1`} style={{ fontSize: heading }}>
+              {bookName}
+            </Text>
+            <Text className="text-text-muted dark:text-gray-400 mt-0.5" style={{ fontSize: caption }}>
+              Hymn No. {number}
+            </Text>
           </View>
+          <ThemeToggle />
+          {/* Prev/next arrows */}
+          <Pressable onPress={() => goToHymn(currentNum - 1)} disabled={currentNum <= 1} hitSlop={8} className="p-1">
+            <Ionicons name="chevron-back" size={18} color={currentNum <= 1 ? theme.textMuted : isDark ? "#94A3B8" : theme.textSecondary} />
+          </Pressable>
+          <Pressable onPress={() => goToHymn(currentNum + 1)} disabled={currentNum >= maxNum} hitSlop={8} className="p-1">
+            <Ionicons name="chevron-forward" size={18} color={currentNum >= maxNum ? theme.textMuted : isDark ? "#94A3B8" : theme.textSecondary} />
+          </Pressable>
           <Pressable onPress={() => toggleFavorite({ hymnId, bookId: bookId!, bookName, number: currentNum, title: hymn?.title ?? "" })} hitSlop={8} className="pt-0.5">
             <Ionicons name={isFav ? "heart" : "heart-outline"} size={22} color={isFav ? theme.favorite : theme.textMuted} />
           </Pressable>
@@ -327,9 +286,9 @@ export default function HymnReaderScreen() {
         </Animated.View>
       )}
 
-      {/* Content — with swipe */}
+      {/* Content */}
       {hymn ? (
-        <Animated.View className="flex-1" style={{ transform: [{ translateX: slideX }] }} {...panResponder.panHandlers}>
+        <View className="flex-1" {...panResponder.panHandlers}>
           <Animated.ScrollView
             ref={scrollRef}
             className="flex-1"
@@ -414,33 +373,11 @@ export default function HymnReaderScreen() {
               </View>
             )}
 
-            {/* Swipe hints */}
-            <View className="flex-row justify-between items-center mt-8 mb-4 px-2">
-              <View className="items-center">
-                {currentNum > 1 && (
-                  <>
-                    <Ionicons name="chevron-back-circle-outline" size={22} color={theme.textMuted} />
-                    <Text className="text-[11px] text-text-muted dark:text-gray-500 mt-1">Hymn {currentNum - 1}</Text>
-                  </>
-                )}
-              </View>
-              <View className="items-center">
-                {currentNum < maxNum && (
-                  <>
-                    <Ionicons name="chevron-forward-circle-outline" size={22} color={theme.textMuted} />
-                    <Text className="text-[11px] text-text-muted dark:text-gray-500 mt-1">Hymn {currentNum + 1}</Text>
-                  </>
-                )}
-              </View>
-            </View>
-
             <View className="h-28" />
           </Animated.ScrollView>
-        </Animated.View>
-      ) : (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-base text-text-muted dark:text-gray-500">Loading...</Text>
         </View>
+      ) : (
+        <HymnShimmer headerHeight={headerHeight} />
       )}
 
       {/* Bottom glow — fades from opaque at screen bottom to transparent above */}
@@ -450,7 +387,7 @@ export default function HymnReaderScreen() {
       <View
         className="absolute left-4 flex-row items-center px-2.5 py-2 rounded-2xl gap-1.5 overflow-hidden"
         style={{
-          bottom: 20,
+          bottom: insets.bottom + 20,
           shadowColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(148,163,184,0.15)",
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 1,
@@ -462,20 +399,14 @@ export default function HymnReaderScreen() {
           <BlurView intensity={isDark ? 25 : 18} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </View>
         <View className="absolute inset-0 bg-white/65 dark:bg-slate-950/55" pointerEvents="none" />
-        <Pressable className="w-8 h-8 rounded-lg bg-gray-100/80 dark:bg-slate-800/80 items-center justify-center" onPress={() => setFontSize(fontSize - 1)}>
-          <Text className="text-[12px] font-semibold text-text-primary dark:text-gray-100">A−</Text>
-        </Pressable>
-        <Text className="text-xs font-semibold text-text-secondary dark:text-gray-400 w-7 text-center">{fontSize}px</Text>
-        <Pressable className="w-8 h-8 rounded-lg bg-gray-100/80 dark:bg-slate-800/80 items-center justify-center" onPress={() => setFontSize(fontSize + 1)}>
-          <Text className="text-[12px] font-semibold text-text-primary dark:text-gray-100">A+</Text>
-        </Pressable>
+        <FontSizePill step={1} />
       </View>
 
       {/* Action icons — independent vertical pill on the right */}
       <View
         className="absolute right-4 rounded-2xl overflow-hidden"
         style={{
-          bottom: 20,
+          bottom: insets.bottom + 20,
           shadowColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(148,163,184,0.15)",
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 1,
