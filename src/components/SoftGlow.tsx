@@ -1,8 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Animated, useColorScheme, View } from "react-native";
+import { Animated, View } from "react-native";
+import { useIsDark } from "@/hooks/useIsDark";
 
 export function TopGlow({ height, opacity }: { height: number; opacity?: Animated.AnimatedInterpolation<number> }) {
-  const isDark = useColorScheme() === "dark";
+  const isDark = useIsDark();
 
   return (
     <Animated.View className="absolute left-0 right-0 top-0" style={{ height, opacity: opacity ?? 1 }} pointerEvents="none">
@@ -18,7 +19,7 @@ export function TopGlow({ height, opacity }: { height: number; opacity?: Animate
 }
 
 export function BottomGlow() {
-  const isDark = useColorScheme() === "dark";
+  const isDark = useIsDark();
 
   return (
     <View className="absolute left-0 right-0 bottom-0 h-32" pointerEvents="none">

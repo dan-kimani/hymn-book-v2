@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { Text } from "@/components/common/Text";
 
 import { theme } from "@/theme/colors";
 

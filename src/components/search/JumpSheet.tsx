@@ -1,11 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View, useColorScheme } from "react-native";
+import { Text } from "@/components/common/Text";
+import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HighlightedText } from "./HighlightedText";
 
 import { fetchHymnMeta, searchStanzas } from "@/data/queries";
+import { useFontScale } from "@/hooks/useFontScale";
+import { useIsDark } from "@/hooks/useIsDark";
 import { theme } from "@/theme/colors";
 
 interface JumpSheetProps {
@@ -23,7 +26,8 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
   const [allHymns, setAllHymns] = useState<any[]>([]);
   const [kbHeight, setKbHeight] = useState(0);
   const insets = useSafeAreaInsets();
-  const isDark = useColorScheme() === "dark";
+  const isDark = useIsDark();
+  const { body, caption, captionSmall } = useFontScale();
 
   const snapPoints = useMemo(() => ["60%"], []);
 
@@ -64,15 +68,22 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
     }
     const timer = setTimeout(async () => {
       setSearching(true);
-      const num = query.match(/^#?(\d{1,4})$/);
-      if (num) {
-        const n = parseInt(num[1]);
-        if (n >= 1 && n <= maxNum) {
-          setResults([{ hymnNumber: n, hymnTitle: `Hymn ${n}`, stanzaText: `Go to hymn ${n}`, bookId, bookName }]);
-          return;
+      try {
+        const num = query.match(/^#?(\d{1,4})$/);
+        if (num) {
+          const n = parseInt(num[1]);
+          if (n >= 1 && n <= maxNum) {
+            setResults([{ hymnNumber: n, hymnTitle: `Hymn ${n}`, stanzaText: `Go to hymn ${n}`, bookId, bookName }]);
+            setSearching(false);
+            return;
+          }
         }
+        setResults(await searchStanzas(query, [bookId], 20));
+      } catch {
+        // ignore
+      } finally {
+        setSearching(false);
       }
-      setResults(await searchStanzas(query, [bookId], 20));
     }, 200);
     return () => clearTimeout(timer);
   }, [query, bookId, maxNum]);
@@ -119,7 +130,8 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
         >
           <Ionicons name="search" size={17} color={theme.textMuted} />
           <BottomSheetTextInput
-            className="flex-1 text-[15px] text-text-primary dark:text-gray-100"
+            className="flex-1 text-text-primary dark:text-gray-100"
+            style={{ fontSize: body }}
             placeholder={`Search ${bookName}…`}
             placeholderTextColor={theme.textMuted}
             value={query}
@@ -146,7 +158,7 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
         ListEmptyComponent={
           emptyMessage ? (
             <View className="items-center py-8">
-              <Text className="text-[13px] text-text-muted dark:text-gray-500">{emptyMessage}</Text>
+              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>{emptyMessage}</Text>
             </View>
           ) : null
         }
@@ -162,16 +174,16 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
               }}
             >
               <View className="flex-row items-center gap-2 mb-0.5">
-                <Text className="text-[13px] font-bold text-primary">#{num}</Text>
-                {isSearch && item.bookName && <Text className="text-[11px] text-text-muted dark:text-gray-500 uppercase">{item.bookName}</Text>}
+                <Text className="font-bold text-primary" style={{ fontSize: caption }}>#{num}</Text>
+                {isSearch && item.bookName && <Text className="text-text-muted dark:text-gray-500 uppercase" style={{ fontSize: captionSmall }}>{item.bookName}</Text>}
               </View>
-              <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
+              <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
                 {title}
               </Text>
               {isSearch && item.stanzaText && item.stanzaText !== `Go to hymn ${num}` ? (
-                <HighlightedText text={item.stanzaText} query={query} className="text-[13px] text-text-secondary dark:text-gray-400 mt-0.5" numberOfLines={2} />
+                <HighlightedText text={item.stanzaText} query={query} className="text-text-secondary dark:text-gray-400 mt-0.5" style={{ fontSize: caption }} numberOfLines={2} />
               ) : item.snippet ? (
-                <Text className="text-[13px] text-text-secondary dark:text-gray-400 mt-0.5" numberOfLines={2}>
+                <Text className="text-text-secondary dark:text-gray-400 mt-0.5" numberOfLines={2} style={{ fontSize: caption }}>
                   {item.snippet}
                 </Text>
               ) : null}
