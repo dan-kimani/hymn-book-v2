@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Nyĩmbo na Kĩrĩkanĩro",
-    "slug": "nyimbo-cia-gikuyu",
+    "slug": "nyimbo-na-kirikaniro",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "gikuyuhymns",
+    "scheme": "nyimbo-na-kirikaniro",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
