@@ -38,7 +38,7 @@ export const useFavoritesStore = create<FavoritesState>()(
       },
     }),
     {
-      name: "nyimbo-na-kirikaniro-favorites",
+      name: "nyimbonakirikaniro-favorites",
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

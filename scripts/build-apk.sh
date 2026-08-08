@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 KEYSTORE="$HOME/apk-signing-key.jks"
-ALIAS="gikuyuhymns"
+ALIAS="nyimbo-na-kirikaniro"
 PASS="asterisk*"
 
 # ── Keystore ─────────────────────────────────────────────────

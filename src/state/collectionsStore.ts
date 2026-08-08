@@ -81,7 +81,7 @@ export const useCollectionsStore = create<CollectionsState>()(
       },
     }),
     {
-      name: "nyimbo-na-kirikaniro-collections",
+      name: "nyimbonakirikaniro-collections",
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

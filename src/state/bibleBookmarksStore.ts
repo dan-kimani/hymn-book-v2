@@ -48,7 +48,7 @@ export const useBibleBookmarksStore = create<BibleBookmarksState>()(
       },
     }),
     {
-      name: "nyimbo-na-kirikaniro-bible-bookmarks",
+      name: "nyimbonakirikaniro-bible-bookmarks",
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

@@ -52,7 +52,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
     }),
     {
-      name: "nyimbo-na-kirikaniro-settings",
+      name: "nyimbonakirikaniro-settings",
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

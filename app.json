@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Nyĩmbo na Kĩrĩkanĩro",
-    "slug": "nyimbo-na-kirikaniro",
+    "slug": "nyimbonakirikaniro",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nyimbo-na-kirikaniro",
+    "scheme": "nyimbonakirikaniro",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,14 +14,14 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.frame.nyimbo-na-kirikaniro"
+      "bundleIdentifier": "app.frame.nyimbonakirikaniro"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundColor": "#122648"
       },
-      "package": "app.frame.nyimbo-na-kirikaniro",
+      "package": "app.frame.nyimbonakirikaniro",
       "permissions": ["RECORD_AUDIO"],
       "allowBackup": true
     },
