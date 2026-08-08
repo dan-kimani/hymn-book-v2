@@ -3,11 +3,12 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
-import { Text, useColorScheme } from "react-native";
+import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Uniwind } from "uniwind";
 import { useFonts } from "expo-font";
 import { Literata_400Regular, Literata_700Bold } from "@expo-google-fonts/literata";
+import { VarelaRound_400Regular } from "@expo-google-fonts/varela-round";
 
 import { useBibleStore } from "@/state/bibleStore";
 import { useSettingsStore } from "@/state/settingsStore";
@@ -17,11 +18,11 @@ export default function RootLayout() {
   const themeMode = useSettingsStore((s) => s.themeMode);
   const resolvedMode = themeMode === "system" ? (colorScheme ?? "light") : themeMode;
   const isDark = resolvedMode === "dark";
-  const readingFont = useSettingsStore((s) => s.readingFont);
 
   const [fontsLoaded] = useFonts({
     Literata: Literata_400Regular,
     LiterataBold: Literata_700Bold,
+    VarelaRound: VarelaRound_400Regular,
   });
 
   // Prefetch bible books into Zustand so Bible tab renders instantly
@@ -32,15 +33,6 @@ export default function RootLayout() {
   useEffect(() => {
     Uniwind.setTheme(resolvedMode as "light" | "dark" | "system");
   }, [resolvedMode]);
-
-  // Apply serif font globally
-  useEffect(() => {
-    const prev = (Text as any).defaultProps;
-    (Text as any).defaultProps = {
-      ...prev,
-      style: [{ fontFamily: readingFont === "serif" ? "Literata" : undefined }, prev?.style].filter(Boolean),
-    };
-  }, [readingFont]);
 
   const bg = isDark ? "#0F172A" : "#FFFFFF";
 
