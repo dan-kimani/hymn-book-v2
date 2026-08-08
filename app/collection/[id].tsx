@@ -1,14 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Image, Pressable, Text, TextInput, View } from "react-native";
+import { Text } from "@/components/common/Text";
+import { Image, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useCollectionsStore } from "@/state/collectionsStore";
 import { BOOK_COVERS, BOOKS } from "@/utils/constants";
+import { useFontScale } from "@/hooks/useFontScale";
+import { useIsDark } from "@/hooks/useIsDark";
 import { theme } from "@/theme/colors";
 
 export default function CollectionDetailScreen() {
+  const isDark = useIsDark();
+  const { fontSize, heading, captionSmall } = useFontScale();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const collections = useCollectionsStore((s) => s.collections);
@@ -44,13 +49,13 @@ export default function CollectionDetailScreen() {
       <View className="px-6 pb-4" style={{ paddingTop: insets.top + 12 }}>
         <View className="flex-row items-start gap-3">
           <Pressable onPress={() => router.back()} hitSlop={8} className="pt-0.5">
-            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+            <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
           </Pressable>
           <View className="flex-1">
             {editing ? (
               <View className="flex-row items-center gap-2">
                 <TextInput
-                  className="flex-1 text-[22px] font-extrabold text-text-primary dark:text-gray-100"
+                  className="flex-1 font-bold text-text-primary dark:text-gray-100"
                   value={editName}
                   onChangeText={setEditName}
                   onSubmitEditing={handleRename}
@@ -62,10 +67,10 @@ export default function CollectionDetailScreen() {
               </View>
             ) : (
               <Pressable onPress={startEdit}>
-                <Text className="text-[28px] font-extrabold tracking-tight text-text-primary dark:text-gray-100">{col.name}</Text>
+                <Text className="font-bold tracking-tight text-text-primary dark:text-gray-100" style={{ fontSize: fontSize + 10 }}>{col.name}</Text>
               </Pressable>
             )}
-            <Text className="text-[15px] font-medium text-text-secondary dark:text-gray-400 mt-1">
+            <Text className="font-medium text-text-secondary dark:text-gray-400 mt-1" style={{ fontSize: heading }}>
               {col.hymns.length} hymn{col.hymns.length === 1 ? "" : "s"}
             </Text>
           </View>

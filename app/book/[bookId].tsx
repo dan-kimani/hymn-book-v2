@@ -3,12 +3,16 @@ import { BlurView } from "expo-blur";
 import { router, useLocalSearchParams } from "expo-router";
 import { BottomGlow, TopGlow } from "@/components/SoftGlow";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, PanResponder, Pressable, Text, View, useColorScheme } from "react-native";
+import { Text } from "@/components/common/Text";
+import { Animated, Dimensions, PanResponder, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PressableScale } from "@/components/common/PressableScale";
 import { JumpSheet } from "@/components/search/JumpSheet";
 import { fetchHymnMeta } from "@/data/queries";
+import { useFontScale } from "@/hooks/useFontScale";
+import { useIsDark } from "@/hooks/useIsDark";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { theme } from "@/theme/colors";
 
 const BOOK_INFO: Record<string, { name: string; language: string; color: string }> = {
@@ -18,20 +22,32 @@ const BOOK_INFO: Record<string, { name: string; language: string; color: string 
   "golden-bells": { name: "Golden Bells", language: "English", color: "text-book-golden-bells" },
 };
 
+const BOOK_IDS = Object.keys(BOOK_INFO);
+
 export default function BookDetailScreen() {
   const insets = useSafeAreaInsets();
+  const { heading, caption, captionSmall } = useFontScale();
   const { bookId } = useLocalSearchParams<{ bookId: string }>();
   const [hymns, setHymns] = useState<Array<{ id: string; number: number; title: string; snippet: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [jumpVisible, setJumpVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const isDark = useIsDark();
 
   const headerOpacity = scrollY.interpolate({ inputRange: [0, 40], outputRange: [0, 1], extrapolate: "clamp" });
   const headerHeight = insets.top + 78;
 
   const info = BOOK_INFO[bookId ?? ""] ?? { name: bookId, language: "", color: "text-primary" };
+
+  const currentBookIdx = BOOK_IDS.indexOf(bookId ?? "");
+  const prevBookId = currentBookIdx > 0 ? BOOK_IDS[currentBookIdx - 1] : null;
+  const nextBookId = currentBookIdx < BOOK_IDS.length - 1 ? BOOK_IDS[currentBookIdx + 1] : null;
+
+  const goToBook = (id: string) => {
+    setHymns([]);
+    setLoading(true);
+    router.setParams({ bookId: id });
+  };
 
   const maxNum = hymns.length;
 
@@ -71,17 +87,22 @@ export default function BookDetailScreen() {
   ).current;
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const data = await fetchHymnMeta(bookId!);
-      setHymns(data);
-      setLoading(false);
+      try {
+        const data = await fetchHymnMeta(bookId!);
+        if (!cancelled) { setHymns(data); setLoading(false); }
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
     })();
+    return () => { cancelled = true; };
   }, [bookId]);
 
   return (
     <Animated.View className="flex-1 bg-white dark:bg-slate-950" style={{ transform: [{ translateX: slideX }] }} {...edgePan.panHandlers}>
       {/* Header — floating glass, scroll-responsive */}
-      <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: jumpVisible ? 0 : 10 }}>
+      <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
         {/* Tall seamless gradient — opaque behind header, imperceptibly fades to transparent */}
         <TopGlow height={headerHeight + 130} opacity={headerOpacity} />
 
@@ -92,17 +113,28 @@ export default function BookDetailScreen() {
 
         <View className="flex-row items-start px-4 pb-4 gap-3">
           <PressableScale onPress={() => router.back()} hitSlop={8} className="pt-0.5">
-            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+            <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
           </PressableScale>
           <View className="flex-1">
-            <Text className="text-[22px] font-bold text-text-primary dark:text-gray-100">{info.name}</Text>
+            <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: heading }}>{info.name}</Text>
             <View className="flex-row items-center gap-2 mt-1">
               <View className="px-2 py-0.5 rounded-md bg-primary-tint dark:bg-primary/20">
-                <Text className="text-[11px] font-semibold text-primary dark:text-primary-light">{info.language}</Text>
+                <Text className="font-semibold text-primary dark:text-primary-light" style={{ fontSize: captionSmall }}>{info.language}</Text>
               </View>
-              <Text className="text-[13px] text-text-muted dark:text-gray-500">{loading ? "Loading..." : `${hymns.length} hymns`}</Text>
+              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>{loading ? "Loading..." : `${hymns.length} hymns`}</Text>
             </View>
           </View>
+          <ThemeToggle />
+          {prevBookId && (
+            <Pressable onPress={() => goToBook(prevBookId)} hitSlop={8} className="p-0.5">
+              <Ionicons name="chevron-back" size={18} color={isDark ? "#94A3B8" : theme.textSecondary} />
+            </Pressable>
+          )}
+          {nextBookId && (
+            <Pressable onPress={() => goToBook(nextBookId)} hitSlop={8} className="p-0.5">
+              <Ionicons name="chevron-forward" size={18} color={isDark ? "#94A3B8" : theme.textSecondary} />
+            </Pressable>
+          )}
         </View>
       </Animated.View>
 

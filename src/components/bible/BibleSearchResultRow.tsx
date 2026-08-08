@@ -1,10 +1,11 @@
 import { router } from "expo-router";
-import { Text, useColorScheme, View } from "react-native";
+import { Text } from "@/components/common/Text";
+import { View } from "react-native";
 
 import { PressableScale } from "@/components/common/PressableScale";
 import { HighlightedText } from "@/components/search/HighlightedText";
 import type { BibleSearchResult } from "@/data/bibleTypes";
-import { theme } from "@/theme/colors";
+import { useFontScale } from "@/hooks/useFontScale";
 
 export function BibleSearchResultRow({
   result,
@@ -13,7 +14,7 @@ export function BibleSearchResultRow({
   result: BibleSearchResult;
   query: string;
 }) {
-  const isDark = useColorScheme() === "dark";
+  const { bodySmall, captionSmall } = useFontScale();
 
   return (
     <PressableScale
@@ -28,23 +29,21 @@ export function BibleSearchResultRow({
       }
     >
       <View
-        className="rounded-xl px-4 py-3 mb-2 border border-border-light dark:border-slate-800"
-        style={{
-          backgroundColor: isDark ? "rgba(30,41,59,0.3)" : theme.surface,
-        }}
+        className="rounded-xl px-4 py-3 mb-2 border border-border-light dark:border-slate-800 bg-surface dark:bg-slate-800/30"
       >
         <View className="flex-row items-center gap-2 mb-1.5">
-          <Text className="text-[13px] font-semibold text-primary">
+          <Text className="font-bold text-primary" style={{ fontSize: captionSmall }}>
             {result.bookName}
           </Text>
-          <Text className="text-[12px] text-text-muted dark:text-gray-500">
+          <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
             {result.chapter}:{result.verse}
           </Text>
         </View>
         <HighlightedText
           text={result.verseText}
           query={query}
-          className="text-[14px] text-text-secondary dark:text-gray-400 leading-normal"
+          className="text-text-secondary dark:text-gray-400 leading-normal"
+          style={{ fontSize: bodySmall }}
           numberOfLines={3}
         />
       </View>

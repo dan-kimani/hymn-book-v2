@@ -1,17 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Text, useColorScheme, View } from "react-native";
+import { Text } from "@/components/common/Text";
+import { View } from "react-native";
 
 import { PressableScale } from "@/components/common/PressableScale";
 import type { BibleReference } from "@/data/bibleTypes";
-import { theme } from "@/theme/colors";
+import { useFontScale } from "@/hooks/useFontScale";
 
 export function BibleReferenceCard({
   reference: refData,
 }: {
   reference: BibleReference;
 }) {
-  const isDark = useColorScheme() === "dark";
+  const { bodySmall, captionSmall } = useFontScale();
 
   return (
     <PressableScale
@@ -25,22 +26,15 @@ export function BibleReferenceCard({
         })
       }
     >
-      <View
-        className="rounded-xl px-4 py-3.5 mb-3 border border-primary/20"
-        style={{
-          backgroundColor: isDark
-            ? "rgba(249,115,22,0.1)"
-            : `${theme.primary}0A`,
-        }}
-      >
+      <View className="rounded-xl px-4 py-3.5 mb-3 border border-primary/20 bg-primary/5 dark:bg-primary/10">
         <View className="flex-row items-center gap-2 mb-1">
-          <Ionicons name="compass" size={16} color={theme.primary} />
-          <Text className="text-[14px] font-semibold text-primary">
+          <Ionicons name="compass" size={16} color="#F97316" />
+          <Text className="font-bold text-primary" style={{ fontSize: bodySmall }}>
             Open {refData.bookName} {refData.chapter}
             {refData.verse ? `:${refData.verse}` : ""}
           </Text>
         </View>
-        <Text className="text-[12px] text-text-muted dark:text-gray-500 ml-6">
+        <Text className="text-text-muted dark:text-gray-500 ml-6" style={{ fontSize: captionSmall }}>
           Go to passage
         </Text>
       </View>

@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Image, Pressable, Text, TextInput, useColorScheme, View } from "react-native";
+import { Text } from "@/components/common/Text";
+import { Animated, Image, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PressableScale } from "@/components/common/PressableScale";
@@ -11,6 +12,8 @@ import { BottomGlow, TopGlow } from "@/components/SoftGlow";
 import { useHymnSearchStore } from "@/state/hymnSearchStore";
 import { useRecentsStore } from "@/state/recentsStore";
 import { useSettingsStore } from "@/state/settingsStore";
+import { useFontScale } from "@/hooks/useFontScale";
+import { useIsDark } from "@/hooks/useIsDark";
 import { theme } from "@/theme/colors";
 import { BOOK_COVERS, BOOKS } from "@/utils/constants";
 
@@ -32,15 +35,18 @@ export default function HomeScreen() {
   const searchBooks = useSettingsStore((s) => s.searchBooks);
   const searchScope = searchBooks.length === 4 ? null : searchBooks;
 
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { body, bodySmall, caption, captionSmall } = useFontScale();
 
-  useEffect(() => { loadDailyHymn(); }, []);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const isDark = useIsDark();
+
+  useEffect(() => {
+    loadDailyHymn();
+  }, []);
   useEffect(() => {
     const timer = setTimeout(() => setQuery(localQuery, searchScope), 200);
     return () => clearTimeout(timer);
-  }, [localQuery]);
+  }, [localQuery, searchScope, setQuery]);
 
   const openHymn = (bookId: string, number: number, verse?: number, stanza?: number) =>
     router.push({
@@ -95,7 +101,7 @@ export default function HomeScreen() {
               autoCorrect={false}
               returnKeyType="search"
             />
-            {query.length > 0 && (
+            {localQuery.length > 0 && (
               <Pressable
                 onPress={() => {
                   setLocalQuery("");
@@ -131,28 +137,28 @@ export default function HomeScreen() {
           {empty && (
             <View className="items-center justify-center py-24 gap-2">
               <Ionicons name="search-outline" size={36} color={theme.textMuted} />
-              <Text className="text-base font-medium text-text-secondary dark:text-gray-400 mt-2">No hymns found</Text>
-              <Text className="text-sm text-text-muted dark:text-gray-500">Try a different search term</Text>
+              <Text className="font-medium text-text-secondary dark:text-gray-400 mt-2" style={{ fontSize: bodySmall }}>No hymns found</Text>
+              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>Try a different search term</Text>
             </View>
           )}
 
           {/* ── Daily Hymn ── */}
           {dailyHymn && idle && (
             <View className="mx-5 mb-8">
-              <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 ml-1 mb-3">Hymn of the Day</Text>
+              <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-3">Hymn of the Day</Text>
               <PressableScale onPress={() => openHymn(dailyHymn.bookId, dailyHymn.number)}>
-                <View className="rounded-xl px-4 py-3.5 border border-gray-100 dark:border-slate-800" style={{ backgroundColor: isDark ? `${theme.primary}0D` : `${theme.primary}08` }}>
+                <View className="rounded-xl px-2 py-3.5 border border-gray-100 dark:border-slate-800" style={{ backgroundColor: isDark ? `${theme.primary}0D` : `${theme.primary}08` }}>
                   <View className="flex-row items-center gap-2 mb-1.5">
-                    <View className="px-2 py-0.5 rounded-md bg-primary-tint dark:bg-primary/20">
-                      <Text className="text-[11px] font-semibold text-primary">{dailyHymn.bookName}</Text>
+                    <View className="py-0.5 rounded-md bg-primary-tint dark:bg-primary/20">
+                      <Text className="font-semibold text-primary" style={{ fontSize: captionSmall }}>{dailyHymn.bookName}</Text>
                     </View>
-                    <Text className="text-[13px] font-medium text-text-muted dark:text-gray-400">#{dailyHymn.number}</Text>
+                    <Text className="font-medium text-text-muted dark:text-gray-400" style={{ fontSize: captionSmall }}>#{dailyHymn.number}</Text>
                   </View>
-                  <Text className="text-[16px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={2}>
+                  <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={2} style={{ fontSize: bodySmall }}>
                     {dailyHymn.title}
                   </Text>
                   {dailyHymn.snippet ? (
-                    <Text className="text-[13px] text-text-secondary dark:text-gray-400 mt-1" numberOfLines={2}>
+                    <Text className="text-text-secondary dark:text-gray-400 mt-1" numberOfLines={2} style={{ fontSize: caption }}>
                       {dailyHymn.snippet}
                     </Text>
                   ) : null}
@@ -165,9 +171,9 @@ export default function HomeScreen() {
           {recents.length > 0 && idle && (
             <View className="mb-8">
               <View className="flex-row items-end justify-between mx-5 mb-3">
-                <Text className="text-base font-bold text-text-primary dark:text-gray-100">Recently opened</Text>
+                <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-3">Recently opened</Text>
                 <Pressable onPress={() => useRecentsStore.getState().clearRecents()} hitSlop={8}>
-                  <Text className="text-[13px] text-text-muted dark:text-gray-500">Clear</Text>
+                  <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>Clear</Text>
                 </Pressable>
               </View>
               <View className="mx-5 gap-2">
@@ -177,10 +183,10 @@ export default function HomeScreen() {
                     <PressableScale key={item.hymnId} className="flex-row items-center gap-3" onPress={() => openHymn(item.bookId, item.number)}>
                       <View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: book?.color ?? theme.primary }} />
                       <View className="flex-1">
-                        <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
+                        <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
                           {item.title}
                         </Text>
-                        <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">
+                        <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
                           {item.bookName} · #{item.number}
                         </Text>
                       </View>
@@ -196,17 +202,17 @@ export default function HomeScreen() {
 
           {/* ── Hymn Collections ── */}
           {idle && (
-            <View className="mb-8">
-              <Text className="text-base font-bold text-text-primary dark:text-gray-100 mx-5 mb-3">Books</Text>
-              <View className="mx-5 gap-2.5">
+            <View className="mb-8 mx-5">
+              <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-3">Books</Text>
+              <View className="gap-2.5">
                 {BOOKS.map((book) => (
                   <PressableScale key={book.id} onPress={() => router.push({ pathname: "/book/[bookId]", params: { bookId: book.id } })}>
                     <View className="flex-row items-center rounded-xl px-4 py-4 border border-gray-100 dark:border-slate-800" style={{ backgroundColor: isDark ? `${book.color}0D` : `${book.color}08` }}>
                       <Image source={BOOK_COVERS[book.id]} className="w-12 h-16 rounded-md mr-4" resizeMode="cover" />
                       <View className="flex-1">
-                        <Text className="text-[16px] font-semibold text-text-primary dark:text-gray-100">{book.name}</Text>
-                        <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">{book.desc}</Text>
-                        <Text className="text-[11px] font-medium text-text-muted dark:text-gray-500 mt-1.5">
+                        <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: bodySmall }}>{book.name}</Text>
+                        <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>{book.desc}</Text>
+                        <Text className="font-medium text-text-muted dark:text-gray-500 mt-1.5" style={{ fontSize: captionSmall }}>
                           {book.count} hymns · {book.language}
                         </Text>
                       </View>

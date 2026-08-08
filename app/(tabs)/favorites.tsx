@@ -1,12 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Alert, FlatList, Image, Pressable, Text, TextInput, View } from "react-native";
+import { Text } from "@/components/common/Text";
+import { Alert, FlatList, Image, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useCollectionsStore } from "@/state/collectionsStore";
 import { useFavoritesStore } from "@/state/favoritesStore";
 import { useBibleBookmarksStore } from "@/state/bibleBookmarksStore";
+import { useFontScale } from "@/hooks/useFontScale";
 import { theme } from "@/theme/colors";
 import { BOOK_COVERS, BOOKS } from "@/utils/constants";
 
@@ -30,6 +32,8 @@ function monthLabel(iso: string): string {
 
 export default function FavoritesScreen() {
   const insets = useSafeAreaInsets();
+  const { fontSize, body, bodySmall, caption, captionSmall } = useFontScale();
+
   const favorites = useFavoritesStore((s) => s.favorites);
   const removeFavorite = useFavoritesStore((s) => s.removeFavorite);
   const collections = useCollectionsStore((s) => s.collections);
@@ -74,12 +78,19 @@ export default function FavoritesScreen() {
   return (
     <View className="flex-1 bg-white dark:bg-slate-950" style={{}}>
       <View className="px-6 pb-4" style={{ paddingTop: insets.top + 12 }}>
-        <Text className="text-[32px] font-extrabold tracking-tight text-text-primary dark:text-gray-100">Saved</Text>
-        <Text className="text-[15px] font-medium text-text-secondary dark:text-gray-400 mt-1">
+        <Text className="font-extrabold tracking-tight text-text-primary dark:text-gray-100" style={{ fontSize: fontSize + 14 }}>Saved</Text>
+        <Text className="font-medium text-text-secondary dark:text-gray-400 mt-1" style={{ fontSize: body }}>
           {favorites.length} favorites · {collections.length} collections{bookmarks.length > 0 ? ` · ${bookmarks.length} bookmarks` : ""}
         </Text>
       </View>
 
+      {favorites.length === 0 && collections.length === 0 && bookmarks.length === 0 ? (
+        <View className="items-center justify-center pt-20 gap-1">
+          <Ionicons name="heart-outline" size={32} color={theme.textMuted} />
+          <Text className="font-medium text-text-secondary dark:text-gray-400 mt-3" style={{ fontSize: body }}>Nothing saved yet</Text>
+          <Text className="text-text-muted dark:text-gray-500 text-center mt-1" style={{ fontSize: caption }}>Tap the heart while reading a hymn</Text>
+        </View>
+      ) : (
       <FlatList
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
@@ -110,17 +121,10 @@ export default function FavoritesScreen() {
               ]
             : []),
         ]}
-        ListEmptyComponent={
-          <View className="items-center justify-center pt-20 gap-1">
-            <Ionicons name="heart-outline" size={32} color={theme.textMuted} />
-            <Text className="text-[15px] font-medium text-text-secondary dark:text-gray-400 mt-3">Nothing saved yet</Text>
-            <Text className="text-[13px] text-text-muted dark:text-gray-500 text-center mt-1">Tap the heart while reading a hymn</Text>
-          </View>
-        }
         renderItem={({ item, index }: any) => {
           if (item.type === "header") {
             return (
-              <Text className="text-sm font-semibold text-text-primary dark:text-gray-100 mt-2 mb-3">
+              <Text className="font-semibold text-text-primary dark:text-gray-100 mt-2 mb-3" style={{ fontSize: bodySmall }}>
                 {item.label} · {item.count}
               </Text>
             );
@@ -130,7 +134,7 @@ export default function FavoritesScreen() {
             const hasItemsBelow = index + 1 < collections.length + 1;
             return (
               <View className={`flex-row items-center justify-between ${hasItemsBelow ? "mt-6" : "mt-6"} mb-3`}>
-                <Text className="text-sm font-semibold text-text-primary dark:text-gray-100">{item.label}</Text>
+                <Text className="font-semibold text-text-primary dark:text-gray-100" style={{ fontSize: bodySmall }}>{item.label}</Text>
               </View>
             );
           }
@@ -141,16 +145,17 @@ export default function FavoritesScreen() {
                 {creating ? (
                   <View className="flex-row items-center gap-2">
                     <TextInput
-                      className="flex-1 bg-gray-50 dark:bg-slate-900 rounded-xl px-4 py-2.5 text-[15px] text-text-primary dark:text-gray-100 border border-gray-100 dark:border-slate-800"
+                      className="flex-1 bg-gray-50 dark:bg-slate-900 rounded-xl px-4 py-2.5 text-text-primary dark:text-gray-100 border border-gray-100 dark:border-slate-800"
                       placeholder="Collection name"
                       placeholderTextColor={theme.textMuted}
                       value={newName}
                       onChangeText={setNewName}
                       onSubmitEditing={handleCreate}
                       autoFocus
+                      style={{ fontSize: body }}
                     />
                     <Pressable className="px-4 py-2.5 bg-primary rounded-xl" onPress={handleCreate}>
-                      <Text className="text-sm font-semibold text-white">Create</Text>
+                      <Text className="font-semibold text-white" style={{ fontSize: bodySmall }}>Create</Text>
                     </Pressable>
                     <Pressable
                       onPress={() => {
@@ -165,7 +170,7 @@ export default function FavoritesScreen() {
                 ) : (
                   <Pressable className="flex-row items-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-gray-300 dark:border-slate-700" onPress={() => setCreating(true)}>
                     <Ionicons name="add" size={18} color={theme.primary} />
-                    <Text className="text-[15px] font-medium text-primary">New collection</Text>
+                    <Text className="font-medium text-primary" style={{ fontSize: body }}>New collection</Text>
                   </Pressable>
                 )}
               </View>
@@ -179,10 +184,10 @@ export default function FavoritesScreen() {
               <Pressable className="flex-row items-center gap-3 mb-2" onPress={() => router.push({ pathname: "/hymn/[bookId]/[number]", params: { bookId: item.bookId, number: String(item.number) } })}>
                 {cover ? <Image source={cover} className="w-9 h-12 rounded-sm" resizeMode="cover" /> : <View className="w-9 h-12 rounded-sm bg-gray-100 dark:bg-slate-800" />}
                 <View className="flex-1">
-                  <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
+                  <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
                     {item.title}
                   </Text>
-                  <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">
+                  <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
                     {item.bookName} · #{item.number}
                   </Text>
                 </View>
@@ -208,9 +213,9 @@ export default function FavoritesScreen() {
               <Pressable className="flex-row items-center gap-3 py-3 px-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/20 mb-1" onPress={toggle}>
                 <Ionicons name={isOpen ? "chevron-down" : "chevron-forward"} size={16} color={theme.textMuted} />
                 <View className="flex-1">
-                  <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100">{monthLabel(item.month + "-01")}</Text>
+                  <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>{monthLabel(item.month + "-01")}</Text>
                 </View>
-                <Text className="text-[13px] text-text-muted dark:text-gray-500">{item.count} bookmarks</Text>
+                <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>{item.count} bookmarks</Text>
               </Pressable>
             );
           }
@@ -222,12 +227,12 @@ export default function FavoritesScreen() {
                   <Ionicons name="bookmark" size={16} color="#B45309" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-[14px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
+                  <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: bodySmall }}>
                     {item.bookName} {item.chapter}:{item.verseStart}
                     {item.verseEnd !== item.verseStart ? `-${item.verseEnd}` : ""}
                   </Text>
                   {item.note ? (
-                    <Text className="text-[12px] text-text-secondary dark:text-gray-400 mt-0.5" numberOfLines={2}>
+                    <Text className="text-text-secondary dark:text-gray-400 mt-0.5" numberOfLines={2} style={{ fontSize: captionSmall }}>
                       {item.note}
                     </Text>
                   ) : null}
@@ -247,8 +252,8 @@ export default function FavoritesScreen() {
                   <Ionicons name="folder-outline" size={18} color={theme.primary} />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100">{item.name}</Text>
-                  <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">
+                  <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>{item.name}</Text>
+                  <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
                     {item.hymns.length} hymn{item.hymns.length === 1 ? "" : "s"}
                   </Text>
                 </View>
@@ -262,6 +267,7 @@ export default function FavoritesScreen() {
           return null;
         }}
       />
+      )}
     </View>
   );
 }

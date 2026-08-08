@@ -2,13 +2,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Tabs } from "expo-router";
-import { Text, useColorScheme, View } from "react-native";
+import { Text } from "@/components/common/Text";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useIsDark } from "@/hooks/useIsDark";
 import { theme } from "@/theme/colors";
 
 const TAB_ITEMS: Record<string, { icon: string; activeIcon: string; label: string }> = {
-  index: { icon: "search-outline", activeIcon: "search", label: "Search" },
+  index: { icon: "musical-notes-outline", activeIcon: "musical-notes", label: "Hymns" },
   bible: { icon: "book-outline", activeIcon: "book", label: "Bible" },
   favorites: { icon: "heart-outline", activeIcon: "heart", label: "Saved" },
   settings: { icon: "settings-outline", activeIcon: "settings", label: "Settings" },
@@ -16,8 +18,7 @@ const TAB_ITEMS: Record<string, { icon: string; activeIcon: string; label: strin
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const isDark = useIsDark();
 
   const barBg = isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.65)";
   const barShadow = isDark ? "rgba(249,115,22,0.3)" : "rgba(148,163,184,0.22)";

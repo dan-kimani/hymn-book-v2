@@ -2,26 +2,28 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { BlurView } from "expo-blur";
 import { useState } from "react";
-import { Pressable, Share, Text, TextInput, useColorScheme, View } from "react-native";
+import { Text } from "@/components/common/Text";
+import { Pressable, Share, TextInput, View } from "react-native";
 
+import { useIsDark } from "@/hooks/useIsDark";
+import { useFontScale } from "@/hooks/useFontScale";
 import { theme } from "@/theme/colors";
 
-export function VerseSelectionBar({
-  text,
-  onBookmark,
-  onCopy,
-  verseCount,
-  anchorY,
-}: {
+interface VerseSelectionBarProps {
   text: string;
   onBookmark: (note: string) => void;
   onCopy?: () => void;
+  onAskAI?: () => void;
   verseCount: number;
   anchorY: number;
-}) {
-  const isDark = useColorScheme() === "dark";
+}
+
+export function VerseSelectionBar({ text, onBookmark, onCopy, onAskAI, verseCount, anchorY }: VerseSelectionBarProps) {
+  const isDark = useIsDark();
+  const { caption, captionSmall } = useFontScale();
   const [writing, setWriting] = useState(false);
   const [note, setNote] = useState("");
+  const [barHeight, setBarHeight] = useState(0);
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(text);
@@ -29,7 +31,9 @@ export function VerseSelectionBar({
   };
 
   const handleShare = async () => {
-    try { await Share.share({ message: text }); } catch {}
+    try {
+      await Share.share({ message: text });
+    } catch {}
   };
 
   const handleSave = () => {
@@ -38,28 +42,32 @@ export function VerseSelectionBar({
     setWriting(false);
   };
 
-  const blurBg = isDark ? "bg-slate-900/70" : "bg-white/75";
+  const blurBg = isDark ? "bg-slate-900" : "bg-white";
   const border = "border border-gray-200/60 dark:border-slate-700/50";
 
   return (
     <View
-      className="absolute left-1/2 z-20"
+      className="absolute z-20"
       style={{
-        top: anchorY - 50,
-        transform: [{ translateX: -140 }],
-        shadowColor: isDark ? "rgba(0,0,0,0.4)" : "rgba(0,0,0,0.08)",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 16,
-        elevation: 8,
+        width: 220,
+        left: "50%",
+        transform: [{ translateX: -110 }],
+        top: Math.max(anchorY - barHeight - 12, 80),
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.6,
+        shadowRadius: 32,
+        elevation: 16,
       }}
+      onLayout={(e) => setBarHeight(e.nativeEvent.layout.height)}
     >
       <View className={`rounded-2xl overflow-hidden ${border}`}>
         <BlurView intensity={isDark ? 30 : 22} tint={isDark ? "dark" : "light"}>
           {writing ? (
-            <View className={`px-3 py-3 ${blurBg} min-w-[240px]`}>
+            <View className={`px-3 py-3 ${blurBg}`}>
               <TextInput
-                className="text-[13px] text-text-primary dark:text-gray-100 mb-2 border-b border-gray-200/40 dark:border-slate-700/40 pb-2"
+                className="text-text-primary dark:text-gray-100 mb-2 border-b border-gray-200/40 dark:border-slate-700/40 pb-2"
+                style={{ fontSize: caption }}
                 placeholder="Add a note…"
                 placeholderTextColor={theme.textMuted}
                 value={note}
@@ -69,41 +77,55 @@ export function VerseSelectionBar({
                 numberOfLines={2}
               />
               <View className="flex-row gap-2 justify-end">
-                <Pressable className="px-3 py-1.5 rounded-lg" onPress={() => { setWriting(false); setNote(""); }}>
-                  <Text className="text-[12px] font-semibold text-text-muted dark:text-gray-400">Cancel</Text>
+                <Pressable
+                  className="px-3 py-1.5 rounded-lg"
+                  onPress={() => {
+                    setWriting(false);
+                    setNote("");
+                  }}
+                >
+                  <Text className="font-semibold text-text-muted dark:text-gray-400" style={{ fontSize: captionSmall }}>
+                    Cancel
+                  </Text>
                 </Pressable>
                 <Pressable className="px-3 py-1.5 rounded-lg bg-primary" onPress={handleSave}>
-                  <Text className="text-[12px] font-semibold text-white">Save</Text>
+                  <Text className="font-semibold text-white" style={{ fontSize: captionSmall }}>
+                    Save
+                  </Text>
                 </Pressable>
               </View>
             </View>
           ) : (
-            <View className={`flex-row items-center px-1.5 py-1.5 gap-0.5 ${blurBg}`}>
-              <Text className="text-[10px] font-semibold text-text-muted dark:text-gray-400 px-2">
-                {verseCount}v
+            <View className={`px-3 py-2.5 ${blurBg}`}>
+              <Text className="font-semibold text-text-muted dark:text-gray-400 mb-2" style={{ fontSize: captionSmall }}>
+                {verseCount} verse{verseCount === 1 ? "" : "s"} selected
               </Text>
-              <View className="w-px h-4 bg-gray-200/40 dark:bg-slate-700/40" />
-              <ActionButton icon="copy-outline" label="Copy" onPress={handleCopy} />
-              <ActionButton icon="share-outline" label="Share" onPress={handleShare} />
-              <ActionButton icon="bookmark-outline" label="Bookmark" onPress={() => setWriting(true)} />
+              <ActionButton icon="copy-outline" label="Copy" fontSize={caption} onPress={handleCopy} />
+              <View className="h-px bg-gray-200/40 dark:bg-slate-700/40 my-1" />
+              <ActionButton icon="share-outline" label="Share" fontSize={caption} onPress={handleShare} />
+              <View className="h-px bg-gray-200/40 dark:bg-slate-700/40 my-1" />
+              <ActionButton icon="bookmark-outline" label="Bookmark" fontSize={caption} onPress={() => setWriting(true)} />
+              <View className="h-px bg-gray-200/40 dark:bg-slate-700/40 my-1" />
+              <ActionButton icon="sparkles-outline" label="Ask AI" fontSize={caption} onPress={() => onAskAI?.()} />
             </View>
           )}
         </BlurView>
       </View>
       <View className="items-center">
-        <View
-          className={`w-3 h-3 rotate-45 -mt-1.5 border-r border-b border-gray-200/60 dark:border-slate-700/50 ${blurBg}`}
-        />
+        <View className={`w-3 h-3 rotate-45 -mt-1.5 border-r border-b border-gray-200/60 dark:border-slate-700/50 ${blurBg}`} />
       </View>
+
     </View>
   );
 }
 
-function ActionButton({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+function ActionButton({ icon, label, fontSize, onPress }: { icon: string; label: string; fontSize: number; onPress: () => void }) {
   return (
-    <Pressable className="flex-row items-center gap-1 px-2.5 py-1.5 rounded-xl active:bg-gray-200/40 dark:active:bg-slate-700/40" onPress={onPress}>
-      <Ionicons name={icon as any} size={15} color={theme.primary} />
-      <Text className="text-[12px] font-semibold text-primary">{label}</Text>
+    <Pressable className="flex-row items-center gap-2.5 px-3 py-2.5 rounded-lg active:bg-gray-200/40 dark:active:bg-slate-700/40" onPress={onPress}>
+      <Ionicons name={icon as any} size={17} color={theme.primary} />
+      <Text className="font-bold text-primary" style={{ fontSize }}>
+        {label}
+      </Text>
     </Pressable>
   );
 }

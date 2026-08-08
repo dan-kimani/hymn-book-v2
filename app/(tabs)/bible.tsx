@@ -5,12 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Pressable,
-  Text,
   TextInput,
-  useColorScheme,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { Text } from "@/components/common/Text";
+import { useIsDark } from "@/hooks/useIsDark";
 
 import { BibleBookRow } from "@/components/bible/BibleBookRow";
 import { BibleReferenceCard } from "@/components/bible/BibleReferenceCard";
@@ -21,7 +22,7 @@ import { theme } from "@/theme/colors";
 
 export default function BibleTab() {
   const insets = useSafeAreaInsets();
-  const isDark = useColorScheme() === "dark";
+  const isDark = useIsDark();
   const [focused, setFocused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -31,6 +32,7 @@ export default function BibleTab() {
   const query = useBibleStore((s) => s.query);
   const setQuery = useBibleStore((s) => s.setQuery);
   const clearSearch = useBibleStore((s) => s.clearSearch);
+  const searching = useBibleStore((s) => s.searching);
   const reference = useBibleStore((s) => s.reference);
   const bookResults = useBibleStore((s) => s.bookResults);
   const verseResults = useBibleStore((s) => s.verseResults);
@@ -47,8 +49,11 @@ export default function BibleTab() {
     return () => clearTimeout(timer);
   }, [localQuery, setQuery]);
 
-  const active = query.length > 0 && !!(reference || bookResults.length || verseResults.length);
-  const idle = !active;
+  const hasResults = !!(reference || bookResults.length || verseResults.length);
+  const active = query.length > 0 && hasResults;
+  const showSearching = query.length > 0 && searching && !hasResults;
+  const showEmpty = query.length > 0 && !searching && !hasResults;
+  const idle = !active && !showSearching && !showEmpty;
 
   const onScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -87,7 +92,7 @@ export default function BibleTab() {
 
         <View className="px-5 pt-2 pb-2">
         <View
-          className={`flex-row items-center px-4 h-11 rounded-2xl gap-3 ${
+          className={`flex-row items-center px-4 h-12 rounded-2xl gap-3 ${
             focused
               ? "bg-white dark:bg-slate-800 border border-primary/30"
               : "bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800"
@@ -125,7 +130,19 @@ export default function BibleTab() {
       </View>
       </Animated.View>
 
-      {active ? (
+      {showSearching ? (
+        <View className="flex-1 items-center justify-center" style={{ paddingTop: insets.top + 64 }}>
+          <View className="h-1 w-32 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+            <Animated.View className="h-full w-1/2 rounded-full bg-primary" />
+          </View>
+        </View>
+      ) : showEmpty ? (
+        <View className="flex-1 items-center justify-center gap-2" style={{ paddingTop: insets.top + 64 }}>
+          <Ionicons name="search-outline" size={36} color={theme.textMuted} />
+          <Text className="text-base font-medium text-text-secondary dark:text-gray-400 mt-2">No results found</Text>
+          <Text className="text-sm text-text-muted dark:text-gray-500">Try a different search term</Text>
+        </View>
+      ) : active ? (
         <Animated.ScrollView
           className="flex-1 px-5"
           contentContainerStyle={{ paddingTop: insets.top + 64, paddingBottom: 120 }}
