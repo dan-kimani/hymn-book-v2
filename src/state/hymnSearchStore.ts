@@ -31,16 +31,21 @@ export const useHymnSearchStore = create<HymnSearchState>((set, get) => ({
 
     set({ searching: true });
 
-    searchStanzas(trimmed, searchScope, 40).then((results) => {
-      if (get().query.trim() === trimmed) {
-        set({ results, searching: false });
-      }
-    });
+    searchStanzas(trimmed, searchScope, 40)
+      .then((results) => {
+        if (get().query.trim() === trimmed) {
+          set({ results, searching: false });
+        }
+      })
+      .catch((e) => {
+        console.error("[hymnSearchStore.search]", e);
+        set({ searching: false });
+      });
   },
 
   clearSearch: () => set({ query: "", results: [], searching: false }),
 
   loadDailyHymn: () => {
-    fetchDailyHymn().then((h) => set({ dailyHymn: h }));
+    fetchDailyHymn().then((h) => set({ dailyHymn: h })).catch((e) => console.error("[hymnSearchStore.dailyHymn]", e));
   },
 }));

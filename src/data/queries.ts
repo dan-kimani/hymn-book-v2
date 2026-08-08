@@ -1,10 +1,5 @@
 import { getDatabase } from "./database";
-import type { Book, Hymn, StanzaResult } from "./types";
-
-export async function fetchBooks(): Promise<Book[]> {
-  const db = await getDatabase();
-  return db.getAllAsync<Book>("SELECT * FROM books ORDER BY id");
-}
+import type { Hymn, StanzaResult } from "./types";
 
 export async function fetchHymnMeta(bookId: string): Promise<Array<{ id: string; number: number; title: string; snippet: string }>> {
   const db = await getDatabase();
@@ -27,13 +22,16 @@ export async function fetchHymnMeta(bookId: string): Promise<Array<{ id: string;
 }
 
 export async function fetchHymn(hymnId: string): Promise<Hymn | null> {
-  const db = await getDatabase();
-  const row = await db.getFirstAsync<any>('SELECT id, book_id as bookId, number, title, "first_line" as firstLine, verses_json FROM hymns WHERE id = ?', [hymnId]);
-  if (!row) return null;
-  return {
-    ...row,
-    verses: JSON.parse(row.verses_json),
-  };
+  try {
+    const db = await getDatabase();
+    const row = await db.getFirstAsync<any>('SELECT id, book_id as bookId, number, title, "first_line" as firstLine, verses_json FROM hymns WHERE id = ?', [hymnId]);
+    if (!row) return null;
+    const verses = row.verses_json ? JSON.parse(row.verses_json) : [];
+    return { ...row, verses };
+  } catch (e) {
+    console.error("[fetchHymn]", e);
+    return null;
+  }
 }
 
 export async function searchStanzas(query: string, bookIds: string[] | null = null, limit: number = 50): Promise<StanzaResult[]> {
@@ -116,29 +114,4 @@ export async function fetchDailyHymn(): Promise<{
     title: row.title,
     snippet,
   };
-}
-
-export async function searchByNumber(number: number, bookIds: string[] | null = null): Promise<Array<{ id: string; bookId: string; bookName: string; number: number; title: string; firstLine: string }>> {
-  const db = await getDatabase();
-
-  if (bookIds && bookIds.length > 0) {
-    const placeholders = bookIds.map(() => "?").join(",");
-    const rows = await db.getAllAsync<any>(
-      `SELECT h.id, h.book_id as bookId, b.name as bookName, h.number, h.title, h.first_line as firstLine
-       FROM hymns h JOIN books b ON h.book_id = b.id
-       WHERE h.number = ? AND h.book_id IN (${placeholders})
-       ORDER BY h.book_id`,
-      [number, ...bookIds],
-    );
-    return rows;
-  } else {
-    const rows = await db.getAllAsync<any>(
-      `SELECT h.id, h.book_id as bookId, b.name as bookName, h.number, h.title, h.first_line as firstLine
-       FROM hymns h JOIN books b ON h.book_id = b.id
-       WHERE h.number = ?
-       ORDER BY h.book_id`,
-      [number],
-    );
-    return rows;
-  }
 }

@@ -36,6 +36,8 @@ interface BibleState {
   clearSearch: () => void;
 }
 
+let chapterToken = 0;
+
 export const useBibleStore = create<BibleState>((set, get) => ({
   // Book list — lazy-loaded once and cached
   books: [],
@@ -52,14 +54,22 @@ export const useBibleStore = create<BibleState>((set, get) => ({
   crossRefsMap: {},
   totalChapters: 0,
   loadChapter: async (bookId: number, chapter: number) => {
-    const [book, verses, tc, crs] = await Promise.all([fetchBook(bookId), fetchVerses(bookId, chapter), fetchBibleChapterCount(bookId), fetchCrossReferences(bookId, chapter)]);
-    const map: Record<number, CrossReference[]> = {};
-    for (const cr of crs as any[]) {
-      const vs = cr.sourceVerse as number;
-      if (!map[vs]) map[vs] = [];
-      map[vs].push(cr);
+    set({ verses: [] });
+    const token = ++chapterToken;
+    try {
+      const [book, verses, tc, crs] = await Promise.all([fetchBook(bookId), fetchVerses(bookId, chapter), fetchBibleChapterCount(bookId), fetchCrossReferences(bookId, chapter)]);
+      if (token !== chapterToken) return; // stale — a newer loadChapter started
+      const map: Record<number, CrossReference[]> = {};
+      for (const cr of crs as any[]) {
+        const vs = cr.sourceVerse as number;
+        if (!map[vs]) map[vs] = [];
+        map[vs].push(cr);
+      }
+      set({ book, verses, totalChapters: tc, crossRefsMap: map });
+    } catch (e) {
+      console.error("[bibleStore.loadChapter]", e);
+      if (token === chapterToken) set({ verses: [] });
     }
-    set({ book, verses, totalChapters: tc, crossRefsMap: map });
   },
 
   // Search
@@ -79,12 +89,16 @@ export const useBibleStore = create<BibleState>((set, get) => ({
     }
 
     set({ searching: true, reference: null });
-    Promise.all([resolveRef(trimmed), searchBooks(trimmed), searchVerses(trimmed, 40)]).then(([ref, bkResults, vsResults]) => {
-      // Only apply if query hasn't changed since
-      if (get().query.trim() === trimmed) {
-        set({ reference: ref, bookResults: bkResults, verseResults: vsResults, searching: false });
-      }
-    });
+    Promise.all([resolveRef(trimmed), searchBooks(trimmed), searchVerses(trimmed, 40)])
+      .then(([ref, bkResults, vsResults]) => {
+        if (get().query.trim() === trimmed) {
+          set({ reference: ref, bookResults: bkResults, verseResults: vsResults, searching: false });
+        }
+      })
+      .catch((e) => {
+        console.error("[bibleStore.search]", e);
+        set({ searching: false });
+      });
   },
 
   clearSearch: () =>

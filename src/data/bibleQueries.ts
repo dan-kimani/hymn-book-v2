@@ -15,7 +15,6 @@ function foldQuery(q: string): string {
 // ── Book cache ─────────────────────────────────────────────────
 
 let _booksCache: BibleBook[] | null = null;
-let _booksByName: { folded: string; book: BibleBook }[] | null = null;
 
 export async function fetchBibleBooks(): Promise<BibleBook[]> {
   if (_booksCache) return _booksCache;
@@ -26,16 +25,6 @@ export async function fetchBibleBooks(): Promise<BibleBook[]> {
   );
 
   _booksCache = rows;
-
-  // Build search index: longest names first for reference resolution
-  _booksByName = _booksCache
-    .flatMap((b) => [
-      { folded: foldQuery(b.name), book: b },
-      { folded: foldQuery(b.englishName), book: b },
-      { folded: foldQuery(b.usfm), book: b },
-      { folded: foldQuery(b.shortName), book: b },
-    ])
-    .sort((a, b) => b.folded.length - a.folded.length);
 
   return _booksCache;
 }
