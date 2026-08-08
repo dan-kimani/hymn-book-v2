@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Nyimbo Cia Gikuyu",
+    "name": "Nyĩmbo na Kĩrĩkanĩro",
     "slug": "nyimbo-cia-gikuyu",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -36,7 +36,7 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Allow Nyimbo Cia Gikuyu to access your microphone for recording hymn tunes."
+          "microphonePermission": "Allow Nyĩmbo na Kĩrĩkanĩro to access your microphone for recording hymn tunes."
         }
       ],
       [

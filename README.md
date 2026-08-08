@@ -1,4 +1,4 @@
-# Nyimbo Cia Gikuyu
+# Nyĩmbo na Kĩrĩkanĩro
 
 A hymn book app for Kikuyu and English hymns — 2,008 hymns across four collections with full-text search.
 
