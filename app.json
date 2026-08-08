@@ -14,14 +14,14 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.frame.gikuyuhymns"
+      "bundleIdentifier": "app.frame.nyimbo-na-kirikaniro"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundColor": "#122648"
       },
-      "package": "app.frame.gikuyuhymns",
+      "package": "app.frame.nyimbo-na-kirikaniro",
       "permissions": ["RECORD_AUDIO"],
       "allowBackup": true
     },

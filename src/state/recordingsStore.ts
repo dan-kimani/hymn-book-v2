@@ -29,7 +29,7 @@ export const useRecordingsStore = create<RecordingsState>()(
         })),
     }),
     {
-      name: "gikuyuhymns-recordings",
+      name: "nyimbo-na-kirikaniro-recordings",
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),
