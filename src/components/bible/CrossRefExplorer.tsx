@@ -146,6 +146,7 @@ export function CrossRefExplorer({ visible, bookName, chapter, crossRefsMap, ver
       handleIndicatorStyle={{ backgroundColor: isDark ? "#475569" : "#cbd5e1", width: 40 }}
       backgroundStyle={{ backgroundColor: isDark ? "#0f172a" : "#fff" }}
       topInset={insets.top + 12}
+      containerStyle={{ zIndex: 100, elevation: 100 }}
     >
       {/* Header */}
       <View className="mb-5 px-4">

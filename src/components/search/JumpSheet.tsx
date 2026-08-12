@@ -30,8 +30,6 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
   const { body, caption, captionSmall } = useFontScale();
 
   const snapPoints = useMemo(() => ["60%"], []);
-
-  // Open / close
   const sheetIndex = visible ? 0 : -1;
 
   // Track keyboard height for push-up
@@ -90,7 +88,6 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
 
   const handleSelect = useCallback(
     (num: number) => {
-      // Close first, then navigate — crucial to avoid addViewAt crash
       onClose(num);
     },
     [onClose],
@@ -114,6 +111,7 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
       handleIndicatorStyle={{ backgroundColor: isDark ? "#475569" : "#cbd5e1", width: 40 }}
       backgroundStyle={{ backgroundColor: isDark ? "#0f172a" : "#fff" }}
       topInset={insets.top + 12}
+      containerStyle={{ zIndex: 100, elevation: 100 }}
       style={{ marginBottom: kbHeight }}
     >
       {/* Search input */}

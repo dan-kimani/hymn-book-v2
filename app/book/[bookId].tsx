@@ -102,7 +102,6 @@ export default function BookDetailScreen() {
   return (
     <Animated.View className="flex-1 bg-white dark:bg-slate-950" style={{ transform: [{ translateX: slideX }] }} {...edgePan.panHandlers}>
       {/* Header — floating glass, scroll-responsive */}
-      {!jumpVisible && (
       <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
         {/* Tall seamless gradient — opaque behind header, imperceptibly fades to transparent */}
         <TopGlow height={headerHeight + 130} opacity={headerOpacity} />
@@ -138,7 +137,6 @@ export default function BookDetailScreen() {
           )}
         </View>
       </Animated.View>
-      )}
 
       {/* Hymn List */}
       <Animated.FlatList

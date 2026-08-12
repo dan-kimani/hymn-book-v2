@@ -241,7 +241,6 @@ export default function HymnReaderScreen() {
       )}
 
       {/* Header — floating glass, scroll-responsive */}
-      {!jumpVisible && (
       <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
         <TopGlow height={headerHeight + 140} opacity={headerOpacity} />
         <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
@@ -272,7 +271,6 @@ export default function HymnReaderScreen() {
           </Pressable>
         </View>
       </Animated.View>
-      )}
 
       {/* Recording indicator */}
       {isRecording && (

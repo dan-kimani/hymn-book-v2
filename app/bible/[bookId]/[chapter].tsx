@@ -229,7 +229,6 @@ export default function BibleChapterScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: bg }}>
       {/* Floating header */}
-      {!explorerVisible && (
       <Animated.View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
         <TopGlow height={insets.top + 80} opacity={headerOpacity} />
 
@@ -281,7 +280,6 @@ export default function BibleChapterScreen() {
           </Pressable>
         </View>
       </Animated.View>
-      )}
 
       {/* Verse content */}
       <View className="flex-1" {...panResponder.panHandlers}>
