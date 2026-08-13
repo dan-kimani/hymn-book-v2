@@ -6,6 +6,7 @@ import type { BookId } from "@/data/types";
 import { useSettingsStore } from "@/state/settingsStore";
 import { useFontScale } from "@/hooks/useFontScale";
 import { FontSizePill } from "@/components/common/FontSizePill";
+import { SectionLabel } from "@/components/common/SectionLabel";
 import { theme } from "@/theme/colors";
 
 const SEARCH_BOOKS: { id: BookId; name: string; count: number }[] = [
@@ -36,9 +37,7 @@ export default function SettingsScreen() {
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         {/* Appearance */}
-        <Text className="font-semibold text-text-primary dark:text-gray-100 mb-3 ml-1" style={{ fontSize: bodySmall }}>
-          Appearance
-        </Text>
+        <SectionLabel className="mb-3 ml-1">Appearance</SectionLabel>
         <View className="flex-row gap-2 mb-8">
           {(["system", "light", "dark"] as const).map((mode) => {
             const active = themeMode === mode;
@@ -53,9 +52,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Reading */}
-        <Text className="font-semibold text-text-primary dark:text-gray-100 mb-3 ml-1" style={{ fontSize: bodySmall }}>
-          Reading
-        </Text>
+        <SectionLabel className="mb-3 ml-1">Reading</SectionLabel>
         <View className="rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 px-4 py-1 mb-8">
           {/* Font family */}
           <View className="flex-row items-center justify-between py-2.5 border-b border-gray-100/60 dark:border-slate-800/60">
@@ -84,9 +81,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Search scope */}
-        <Text className="font-semibold text-text-primary dark:text-gray-100 mb-3 ml-1" style={{ fontSize: bodySmall }}>
-          Search scope
-        </Text>
+        <SectionLabel className="mb-3 ml-1">Search scope</SectionLabel>
         <View className="rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 px-4 py-1 mb-8">
           {SEARCH_BOOKS.map((book) => (
             <View key={book.id} className="flex-row items-center justify-between py-2.5 border-b border-gray-100/60 dark:border-slate-800/60 last:border-b-0">

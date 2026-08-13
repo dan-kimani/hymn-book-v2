@@ -14,6 +14,7 @@ import { useFontScale } from "@/hooks/useFontScale";
 import { useIsDark } from "@/hooks/useIsDark";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { theme } from "@/theme/colors";
+import { useRecordingsStore } from "@/state/recordingsStore";
 
 const BOOK_INFO: Record<string, { name: string; language: string; color: string }> = {
   "roho-mutheru": { name: "Nyimbo Cia Roho Mutheru", language: "Kikuyu", color: "text-book-roho-mutheru" },
@@ -33,6 +34,7 @@ export default function BookDetailScreen() {
   const [jumpVisible, setJumpVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const isDark = useIsDark();
+  const recordings = useRecordingsStore((s) => s.recordings);
 
   const headerOpacity = scrollY.interpolate({ inputRange: [0, 40], outputRange: [0, 1], extrapolate: "clamp" });
   const headerHeight = insets.top + 78;
@@ -144,21 +146,32 @@ export default function BookDetailScreen() {
         windowSize={7}
         scrollEventThrottle={16}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
-        renderItem={({ item }) => (
-          <PressableScale
-            className="flex-row items-center px-4 py-3.5 border-b-hairline border-border-light dark:border-gray-800 gap-3"
-            onPress={() => router.push({ pathname: "/hymn/[bookId]/[number]", params: { bookId: bookId!, number: String(item.number) } })}
-          >
-            <Text className={`font-bold min-w-6 ${info.color}`} style={{ fontSize: body }}>{item.number}.</Text>
-            <View className="flex-1">
-              <Text className="text-text-primary dark:text-gray-100" numberOfLines={2} style={{ fontSize: bodyLarge }}>
-                <Text className="font-semibold">{item.title}</Text>
-                {item.snippet ? <Text className="text-text-secondary dark:text-gray-400"> {item.snippet}</Text> : null}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={theme.textMuted} />
-          </PressableScale>
-        )}
+        renderItem={({ item }) => {
+          const hasRecording = !!recordings[item.id];
+          return (
+            <PressableScale
+              className="flex-row items-center px-4 py-3.5 border-b-hairline border-border-light dark:border-gray-800 gap-3"
+              onPress={() => router.push({ pathname: "/hymn/[bookId]/[number]", params: { bookId: bookId!, number: String(item.number) } })}
+            >
+              <Text className={`font-bold min-w-6 ${info.color}`} style={{ fontSize: body }}>{item.number}.</Text>
+              <View className="flex-1">
+                <Text className="text-text-primary dark:text-gray-100" numberOfLines={2} style={{ fontSize: bodyLarge }}>
+                  <Text className="font-semibold">{item.title}</Text>
+                  {item.snippet ? <Text className="text-text-secondary dark:text-gray-400"> {item.snippet}</Text> : null}
+                </Text>
+              </View>
+              {hasRecording && (
+                <View
+                  className="w-5 h-5 rounded-full items-center justify-center"
+                  style={{ backgroundColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(249,115,22,0.12)" }}
+                >
+                  <Ionicons name="mic" size={11} color={theme.primary} />
+                </View>
+              )}
+              <Ionicons name="chevron-forward" size={16} color={theme.textMuted} />
+            </PressableScale>
+          );
+        }}
         showsVerticalScrollIndicator={false}
       />
 
