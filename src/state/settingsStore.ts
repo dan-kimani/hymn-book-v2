@@ -1,17 +1,8 @@
-import { Appearance } from "react-native";
 import { Uniwind } from "uniwind";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { BookId } from "../data/types";
-
-function resolveTheme(mode: "system" | "light" | "dark"): "light" | "dark" {
-  if (mode === "system") {
-    const system = Appearance.getColorScheme();
-    return system === "dark" ? "dark" : "light";
-  }
-  return mode;
-}
 
 interface SettingsState {
   themeMode: "system" | "light" | "dark";
@@ -36,7 +27,7 @@ export const useSettingsStore = create<SettingsState>()(
       openaiKey: "",
 
       setThemeMode: (mode) => {
-        Uniwind.setTheme(resolveTheme(mode));
+        Uniwind.setTheme(mode);
         set({ themeMode: mode });
       },
       setFontSize: (size) => set({ fontSize: Math.max(14, Math.min(28, size)) }),

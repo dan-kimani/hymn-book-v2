@@ -7,7 +7,7 @@ import type { BibleBookmark } from "@/data/bibleTypes";
 interface BibleBookmarksState {
   bookmarks: BibleBookmark[];
   addBookmark: (b: Omit<BibleBookmark, "id" | "createdAt">) => void;
-  removeBookmark: (bookId: number, chapter: number, verse: number) => void;
+  removeBookmark: (id: string) => void;
   updateNote: (id: string, note: string) => void;
   isBookmarked: (bookId: number, chapter: number, verse: number) => BibleBookmark | undefined;
   getChapterBookmarks: (bookId: number, chapter: number) => BibleBookmark[];
@@ -27,9 +27,9 @@ export const useBibleBookmarksStore = create<BibleBookmarksState>()(
         set((s) => ({ bookmarks: [bookmark, ...s.bookmarks] }));
       },
 
-      removeBookmark: (bookId, chapter, verse) => {
+      removeBookmark: (id) => {
         set((s) => ({
-          bookmarks: s.bookmarks.filter((b) => !(b.bookId === bookId && b.chapter === chapter && b.verseStart <= verse && b.verseEnd >= verse)),
+          bookmarks: s.bookmarks.filter((b) => b.id !== id),
         }));
       },
 

@@ -138,7 +138,10 @@ export const useCollectionsStore = create<CollectionsState>()(
       name: "nyimbonakirikaniro-collections",
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => {
-        return () => {
+        return (_state, error) => {
+          if (error) {
+            console.error("[collectionsStore] hydration failed:", error);
+          }
           // Seed defaults after persisted state is restored
           useCollectionsStore.getState().seedDefaultsIfNeeded();
         };

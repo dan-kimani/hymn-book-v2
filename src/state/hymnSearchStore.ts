@@ -22,14 +22,14 @@ export const useHymnSearchStore = create<HymnSearchState>((set, get) => ({
 
   setQuery: (q: string, searchScope: string[] | null) => {
     const trimmed = q.trim();
-    set({ query: q });
+    set({ query: trimmed });
 
     if (!trimmed) {
       set({ results: [], searching: false });
       return;
     }
 
-    set({ searching: true });
+    set({ searching: true, results: [] });
 
     searchStanzas(trimmed, searchScope, 40)
       .then((results) => {
@@ -39,7 +39,9 @@ export const useHymnSearchStore = create<HymnSearchState>((set, get) => ({
       })
       .catch((e) => {
         console.error("[hymnSearchStore.search]", e);
-        set({ searching: false });
+        if (get().query.trim() === trimmed) {
+          set({ searching: false });
+        }
       });
   },
 

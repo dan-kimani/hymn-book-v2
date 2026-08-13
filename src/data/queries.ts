@@ -45,9 +45,11 @@ export async function searchStanzas(query: string, bookIds: string[] | null = nu
   const terms = sanitized.split(/\s+/).filter(Boolean);
   const ftsTerms = terms.map((t) => `"${t}"*`).join(" OR ");
 
+  const params: string[] = [];
   let bookFilter = "";
   if (bookIds && bookIds.length > 0) {
-    bookFilter = `AND s.book_id IN (${bookIds.map((id) => `'${id}'`).join(",")})`;
+    bookFilter = `AND s.book_id IN (${bookIds.map(() => "?").join(",")})`;
+    params.push(...bookIds);
   }
 
   // Subquery: get the best (min rank) stanza per hymn, then deduplicate by hymnId
@@ -69,7 +71,7 @@ export async function searchStanzas(query: string, bookIds: string[] | null = nu
     )
   `;
 
-  return db.getAllAsync<StanzaResult>(sql);
+  return db.getAllAsync<StanzaResult>(sql, params);
 }
 
 export async function fetchDailyHymn(): Promise<{

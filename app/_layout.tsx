@@ -29,10 +29,11 @@ export default function RootLayout() {
   const loadBooks = useBibleStore((s) => s.loadBooks);
   useEffect(() => { loadBooks(); }, []);
 
-  // Sync uniwind's theme with our Zustand store so dark: classes resolve correctly
+  // Sync uniwind's theme with our Zustand store so dark: classes resolve correctly.
+  // Pass the raw mode ("system" included) so uniwind stays adaptive on system changes.
   useEffect(() => {
-    Uniwind.setTheme(resolvedMode as "light" | "dark" | "system");
-  }, [resolvedMode]);
+    Uniwind.setTheme(themeMode);
+  }, [themeMode]);
 
   const bg = isDark ? "#0F172A" : "#FFFFFF";
 

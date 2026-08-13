@@ -309,7 +309,7 @@ export default function FavoritesScreen() {
                     ) : null}
                     <Text className="text-[11px] text-text-muted dark:text-gray-500 mt-0.5">{relativeTime(item.createdAt)}</Text>
                   </View>
-                  <Pressable onPress={() => removeBookmark(item.bookId, item.chapter, item.verseStart)} hitSlop={8}>
+                  <Pressable onPress={() => removeBookmark(item.id)} hitSlop={8}>
                     <Ionicons name="close" size={14} color={theme.textMuted} />
                   </Pressable>
                 </Pressable>

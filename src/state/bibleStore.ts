@@ -54,7 +54,7 @@ export const useBibleStore = create<BibleState>((set, get) => ({
   crossRefsMap: {},
   totalChapters: 0,
   loadChapter: async (bookId: number, chapter: number) => {
-    set({ verses: [] });
+    set({ book: null, verses: [], crossRefsMap: {}, totalChapters: 0 });
     const token = ++chapterToken;
     try {
       const [book, verses, tc, crs] = await Promise.all([fetchBook(bookId), fetchVerses(bookId, chapter), fetchBibleChapterCount(bookId), fetchCrossReferences(bookId, chapter)]);
@@ -68,7 +68,7 @@ export const useBibleStore = create<BibleState>((set, get) => ({
       set({ book, verses, totalChapters: tc, crossRefsMap: map });
     } catch (e) {
       console.error("[bibleStore.loadChapter]", e);
-      if (token === chapterToken) set({ verses: [] });
+      if (token === chapterToken) set({ book: null, verses: [], crossRefsMap: {}, totalChapters: 0 });
     }
   },
 
@@ -81,14 +81,14 @@ export const useBibleStore = create<BibleState>((set, get) => ({
 
   setQuery: (q: string) => {
     const trimmed = q.trim();
-    set({ query: q });
+    set({ query: trimmed });
 
     if (!trimmed) {
       set({ searching: false, reference: null, bookResults: [], verseResults: [] });
       return;
     }
 
-    set({ searching: true, reference: null });
+    set({ searching: true, reference: null, bookResults: [], verseResults: [] });
     Promise.all([resolveRef(trimmed), searchBooks(trimmed), searchVerses(trimmed, 40)])
       .then(([ref, bkResults, vsResults]) => {
         if (get().query.trim() === trimmed) {
@@ -97,7 +97,9 @@ export const useBibleStore = create<BibleState>((set, get) => ({
       })
       .catch((e) => {
         console.error("[bibleStore.search]", e);
-        set({ searching: false });
+        if (get().query.trim() === trimmed) {
+          set({ searching: false });
+        }
       });
   },
 
