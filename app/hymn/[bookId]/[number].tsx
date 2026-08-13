@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import * as Clipboard from "expo-clipboard";
+import * as FileSystem from "expo-file-system/legacy";
 import { router, useLocalSearchParams } from "expo-router";
 import { BottomGlow, TopGlow } from "@/components/SoftGlow";
 import { useEffect, useRef, useState } from "react";
@@ -71,7 +72,12 @@ export default function HymnReaderScreen() {
   const [highlightKey, setHighlightKey] = useState<string | null>(matchKey);
 
   useEffect(() => {
-    if (!matchKey) return;
+    if (!matchKey) {
+      // Navigation cleared the match — reset any in-flight highlight.
+      setHighlightKey(null);
+      highlightAnim.setValue(0);
+      return;
+    }
     setHighlightKey(matchKey);
     highlightAnim.setValue(1);
     // Delay fade until after scroll lands
@@ -98,18 +104,31 @@ export default function HymnReaderScreen() {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const playback = usePlayback(playingPath);
 
+  const deleteRecordingFile = (path: string | undefined) => {
+    if (path) {
+      FileSystem.deleteAsync(path, { idempotent: true }).catch(() => {});
+    }
+  };
+
+  const finalizeRecording = () => {
+    stop().then((result) => {
+      if (result) {
+        // Delete any previous recording for this hymn so re-recording doesn't orphan a file.
+        const prev = useRecordingsStore.getState().recordings[result.hymnId];
+        deleteRecordingFile(prev?.path);
+        setRecording(result.hymnId, {
+          id: Date.now().toString(36),
+          path: result.path,
+          duration: result.duration,
+          createdAt: Date.now(),
+        });
+      }
+    });
+  };
+
   const handleMicPress = () => {
     if (isRecording) {
-      stop().then((result) => {
-        if (result) {
-          setRecording(hymnId, {
-            id: Date.now().toString(36),
-            path: result.path,
-            duration: result.duration,
-            createdAt: Date.now(),
-          });
-        }
-      });
+      finalizeRecording();
     } else {
       start();
     }
@@ -129,6 +148,8 @@ export default function HymnReaderScreen() {
   const progress = isActive && recDuration > 0 ? playback.currentTime / recDuration : 0;
 
   const handleDeleteRecording = () => {
+    playback.stop();
+    deleteRecordingFile(recording?.path);
     removeRecording(hymnId);
     setPlayingId(null);
     setPlayingPath(null);
@@ -176,14 +197,20 @@ export default function HymnReaderScreen() {
     const timer = setTimeout(() => {
       const y = verseYs.current[tv];
       if (y != null) {
-        (scrollRef.current as any)?.scrollTo?.({ y: y - 20, animated: true });
+        (scrollRef.current as any)?.scrollTo?.({ y: y - headerHeight, animated: true });
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [hymn, targetVerse]);
+  }, [hymn, targetVerse, headerHeight]);
 
   const goToHymn = (num: number) => {
     if (num < 1 || num > maxNum) return;
+    if (isRecording) {
+      finalizeRecording();
+    }
+    playback.stop();
+    setPlayingId(null);
+    setPlayingPath(null);
     scrollRef.current?.scrollTo?.({ y: 0, animated: false });
     setHymn(null);
     router.setParams({ bookId: bookId!, number: String(num), verse: "", stanza: "" });

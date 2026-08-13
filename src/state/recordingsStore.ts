@@ -24,9 +24,10 @@ export const useRecordingsStore = create<RecordingsState>()(
           recordings: { ...state.recordings, [hymnId]: recording },
         })),
       removeRecording: (hymnId) =>
-        set((state) => ({
-          recordings: { ...state.recordings, [hymnId]: null },
-        })),
+        set((state) => {
+          const { [hymnId]: _removed, ...rest } = state.recordings;
+          return { recordings: rest };
+        }),
     }),
     {
       name: "nyimbonakirikaniro-recordings",

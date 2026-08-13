@@ -2,6 +2,7 @@ import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
   useAudioPlayer,
+  useAudioPlayerStatus,
   useAudioRecorder,
 } from "expo-audio";
 import * as FileSystem from "expo-file-system/legacy";
@@ -14,7 +15,7 @@ export function useRecorder(hymnId: string) {
   const [permissionGranted, setPermissionGranted] = useState(false);
   const elapsedRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const firstRecord = useRef(true);
+  const startHymnIdRef = useRef(hymnId);
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
@@ -36,12 +37,9 @@ export function useRecorder(hymnId: string) {
       return;
     }
     try {
-      // Prepare only on the first recording session
-      if (firstRecord.current) {
-        await recorder.prepareToRecordAsync(RecordingPresets.HIGH_QUALITY);
-        firstRecord.current = false;
-      }
+      await recorder.prepareToRecordAsync(RecordingPresets.HIGH_QUALITY);
       recorder.record();
+      startHymnIdRef.current = hymnId;
       setIsRecording(true);
       elapsedRef.current = 0;
       setElapsed(0);
@@ -52,10 +50,11 @@ export function useRecorder(hymnId: string) {
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "Could not start recording.");
     }
-  }, [permissionGranted, recorder]);
+  }, [permissionGranted, recorder, hymnId]);
 
-  const stop = useCallback(async (): Promise<{ path: string; duration: number } | null> => {
+  const stop = useCallback(async (): Promise<{ path: string; duration: number; hymnId: string } | null> => {
     const duration = elapsedRef.current;
+    const recordedHymnId = startHymnIdRef.current;
 
     // Stop the timer immediately
     if (timerRef.current) {
@@ -82,22 +81,25 @@ export function useRecorder(hymnId: string) {
 
     // Copy to managed directory for persistence, fall back to original URI
     try {
-      const dir = `${FileSystem.documentDirectory}recordings/${hymnId}/`;
+      const dir = `${FileSystem.documentDirectory}recordings/${recordedHymnId}/`;
       await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
       const dest = `${dir}${Date.now().toString(36)}.m4a`;
       await FileSystem.copyAsync({ from: uri, to: dest });
-      return { path: dest, duration };
+      return { path: dest, duration, hymnId: recordedHymnId };
     } catch {
-      return { path: uri, duration };
+      return { path: uri, duration, hymnId: recordedHymnId };
     }
-  }, [recorder, hymnId]);
+  }, [recorder]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (recorder.isRecording) {
+        recorder.stop().catch(() => {});
+      }
     };
-  }, []);
+  }, [recorder]);
 
   return { isRecording, elapsed, start, stop };
 }
@@ -111,11 +113,13 @@ export function usePlayback(filePath: string | null) {
     : null;
 
   const player = useAudioPlayer(uri ? { uri } : undefined);
+  const status = useAudioPlayerStatus(player);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const elapsedRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedRef = useRef<string | null>(null);
+  const manualPlayRef = useRef(false);
 
   const clearTimer = () => {
     if (timerRef.current) {
@@ -124,13 +128,25 @@ export function usePlayback(filePath: string | null) {
     }
   };
 
+  // Stop the tick timer when the audio reaches the end, clamping to the duration.
+  useEffect(() => {
+    if (!status.didJustFinish) return;
+    const end = player.duration || elapsedRef.current;
+    setIsPlaying(false);
+    clearTimer();
+    elapsedRef.current = end;
+    setCurrentTime(end);
+  }, [status.didJustFinish, player]);
+
   // Auto-play when uri changes
   useEffect(() => {
     if (!uri || startedRef.current === uri) return;
     startedRef.current = uri;
+    manualPlayRef.current = false;
     clearTimer();
 
     const t = setTimeout(() => {
+      if (manualPlayRef.current) return; // user already toggled playback
       player.play();
       setIsPlaying(true);
       elapsedRef.current = 0;
@@ -157,14 +173,26 @@ export function usePlayback(filePath: string | null) {
       player.pause();
       setIsPlaying(false);
     } else {
+      manualPlayRef.current = true;
       player.play();
       elapsedRef.current = currentTime;
       setIsPlaying(true);
     }
   }, [player, isPlaying, currentTime]);
 
+  const stop = useCallback(() => {
+    player.pause();
+    setIsPlaying(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    elapsedRef.current = 0;
+    setCurrentTime(0);
+  }, [player]);
+
   // Reset on unmount
   useEffect(() => clearTimer, []);
 
-  return { isPlaying, currentTime, toggle };
+  return { isPlaying, currentTime, toggle, stop };
 }
