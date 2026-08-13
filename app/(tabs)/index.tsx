@@ -23,9 +23,9 @@ const SEARCH_AREA = 76; // pt-4 (16) + h-12 (48) + pb-3 (12)
 function getGreeting(): { text: string; emoji: string } {
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 12) return { text: "Wĩmwega rũciinĩ", emoji: "☀️" };
-  if (hour >= 12 && hour < 17) return { text: "Wĩmwega mũthenya", emoji: "🌤️" };
+  if (hour >= 12 && hour < 17) return { text: "Wĩmwega mĩaraho", emoji: "🌤️" };
   if (hour >= 17 && hour < 20) return { text: "Wĩmwega hwainĩ", emoji: "🌙" };
-  return { text: "Wĩmwega ũtukũ", emoji: "⭐" };
+  return { text: "Nĩwatinda owega?", emoji: "⭐" };
 }
 
 export default function HomeScreen() {
@@ -307,6 +307,49 @@ export default function HomeScreen() {
             </View>
           )}
 
+          {/* ── Books ── */}
+          {idle && (
+            <View className="mb-8 mx-5">
+              <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-3">Books</Text>
+              <View className="flex-row -mx-1.5">
+                {BOOKS.map((book) => (
+                  <View key={book.id} className="w-1/4 px-1.5">
+                    <PressableScale onPress={() => router.push({ pathname: "/book/[bookId]", params: { bookId: book.id } })}>
+                      <View
+                        className="rounded-xl"
+                        style={{
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.15,
+                          shadowRadius: 12,
+                          elevation: 4,
+                        }}
+                      >
+                        <View
+                          className="rounded-xl overflow-hidden"
+                          style={{
+                            aspectRatio: 1,
+                            backgroundColor: isDark ? `${book.color}1A` : `${book.color}0F`,
+                          }}
+                        >
+                          <Image source={BOOK_COVERS[book.id]} className="w-full h-full" resizeMode="cover" />
+                        </View>
+                      </View>
+                      <View className="mt-1.5 items-center">
+                        <Text className="font-semibold text-text-primary dark:text-gray-100 text-center" numberOfLines={1} style={{ fontSize: captionSmall }}>
+                          {book.shortName}
+                        </Text>
+                        <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+                          {book.count} hymns
+                        </Text>
+                      </View>
+                    </PressableScale>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* ── Recent Hymns ── */}
           {recents.length > 0 && idle && (
             <View className="mb-8">
@@ -338,39 +381,6 @@ export default function HomeScreen() {
                     </PressableScale>
                   );
                 })}
-              </View>
-            </View>
-          )}
-
-          {/* ── Hymn Collections ── */}
-          {idle && (
-            <View className="mb-8 mx-5">
-              <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-3">Books</Text>
-              <View className="gap-2.5">
-                {BOOKS.map((book) => (
-                  <PressableScale key={book.id} onPress={() => router.push({ pathname: "/book/[bookId]", params: { bookId: book.id } })}>
-                    <View
-                      className="flex-row items-center rounded-xl px-4 py-4 border border-gray-100 dark:border-slate-800"
-                      style={{
-                        backgroundColor: isDark ? `${book.color}0D` : `${book.color}08`,
-                      }}
-                    >
-                      <Image source={BOOK_COVERS[book.id]} className="w-12 h-16 rounded-md mr-4" resizeMode="cover" />
-                      <View className="flex-1">
-                        <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: bodySmall }}>
-                          {book.name}
-                        </Text>
-                        <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
-                          {book.desc}
-                        </Text>
-                        <Text className="font-medium text-text-muted dark:text-gray-500 mt-1.5" style={{ fontSize: captionSmall }}>
-                          {book.count} hymns · {book.language}
-                        </Text>
-                      </View>
-                      <Ionicons name="chevron-forward" size={16} color={theme.textMuted} />
-                    </View>
-                  </PressableScale>
-                ))}
               </View>
             </View>
           )}

@@ -26,7 +26,7 @@ const PROMPT = (ref: string) =>
 
 export function AIStudyModal({ visible, reference, onClose }: AIStudyModalProps) {
   const insets = useSafeAreaInsets();
-  const { body } = useFontScale();
+  const { body, bodySmall, captionSmall } = useFontScale();
   const [mountKey, setMountKey] = useState(0);
   const [ready, setReady] = useState(false);
 
@@ -53,7 +53,7 @@ export function AIStudyModal({ visible, reference, onClose }: AIStudyModalProps)
             <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
               AI Bible Study
             </Text>
-            <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: 12 }}>
+            <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
               {reference}
             </Text>
           </View>
@@ -92,7 +92,7 @@ export function AIStudyModal({ visible, reference, onClose }: AIStudyModalProps)
           {!ready && (
             <View className="absolute inset-0 bg-white dark:bg-slate-950 items-center justify-center gap-3">
               <ActivityIndicator size="large" color={theme.primary} />
-              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: 14 }}>
+              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: bodySmall }}>
                 Loading Bible Study...
               </Text>
             </View>

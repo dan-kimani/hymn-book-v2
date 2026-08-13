@@ -18,7 +18,7 @@ const defaultEmoji: Record<string, string> = Object.fromEntries(DEFAULT_COLLECTI
 
 export default function CollectionDetailScreen() {
   const isDark = useIsDark();
-  const { heading } = useFontScale();
+  const { heading, body, bodySmall, caption, captionSmall } = useFontScale();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const collections = useCollectionsStore((s) => s.collections);
@@ -90,7 +90,7 @@ export default function CollectionDetailScreen() {
               </Pressable>
             )}
           </View>
-          <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: 14 }}>
+          <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: bodySmall }}>
             {col.hymns.length}
           </Text>
         </View>
@@ -110,7 +110,7 @@ export default function CollectionDetailScreen() {
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
         ListHeaderComponent={
           <View className="pb-3">
-            <Text className="font-medium text-text-secondary dark:text-gray-400" style={{ fontSize: 15 }}>
+            <Text className="font-medium text-text-secondary dark:text-gray-400" style={{ fontSize: body }}>
               {col.hymns.length} hymn{col.hymns.length === 1 ? "" : "s"}
             </Text>
           </View>
@@ -118,8 +118,8 @@ export default function CollectionDetailScreen() {
         ListEmptyComponent={
           <View className="items-center pt-16">
             <Ionicons name="musical-notes-outline" size={36} color={theme.textMuted} />
-            <Text className="text-[15px] font-medium text-text-secondary dark:text-gray-400 mt-3">Empty collection</Text>
-            <Text className="text-[13px] text-text-muted dark:text-gray-500 mt-1">Add hymns from the reader</Text>
+            <Text className="font-medium text-text-secondary dark:text-gray-400 mt-3" style={{ fontSize: body }}>Empty collection</Text>
+            <Text className="text-text-muted dark:text-gray-500 mt-1" style={{ fontSize: caption }}>Add hymns from the reader</Text>
           </View>
         }
         renderItem={({ item: hymn }) => {
@@ -137,10 +137,10 @@ export default function CollectionDetailScreen() {
             >
               {cover ? <Image source={cover} className="w-9 h-12 rounded-sm" resizeMode="cover" /> : <View className="w-9 h-12 rounded-sm bg-gray-100 dark:bg-slate-800" />}
               <View className="flex-1">
-                <Text className="text-[15px] font-semibold text-text-primary dark:text-gray-100" numberOfLines={1}>
+                <Text className="font-semibold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
                   {hymn.title}
                 </Text>
-                <Text className="text-[12px] text-text-muted dark:text-gray-500 mt-0.5">
+                <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
                   {hymn.bookName} · #{hymn.number}
                 </Text>
               </View>

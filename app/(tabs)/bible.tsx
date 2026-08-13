@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Text } from "@/components/common/Text";
 import { useIsDark } from "@/hooks/useIsDark";
+import { useFontScale } from "@/hooks/useFontScale";
 
 import { BibleBookRow } from "@/components/bible/BibleBookRow";
 import { BibleReferenceCard } from "@/components/bible/BibleReferenceCard";
@@ -23,6 +24,7 @@ import { theme } from "@/theme/colors";
 export default function BibleTab() {
   const insets = useSafeAreaInsets();
   const isDark = useIsDark();
+  const { bodyLarge, bodySmall } = useFontScale();
   const [focused, setFocused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -150,8 +152,8 @@ export default function BibleTab() {
       ) : showEmpty ? (
         <View className="flex-1 items-center justify-center gap-2" style={{ paddingTop: insets.top + 64 }}>
           <Ionicons name="search-outline" size={36} color={theme.textMuted} />
-          <Text className="text-base font-medium text-text-secondary dark:text-gray-400 mt-2">No results found</Text>
-          <Text className="text-sm text-text-muted dark:text-gray-500">Try a different search term</Text>
+          <Text className="font-medium text-text-secondary dark:text-gray-400 mt-2" style={{ fontSize: bodyLarge }}>No results found</Text>
+          <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: bodySmall }}>Try a different search term</Text>
         </View>
       ) : active ? (
         <Animated.ScrollView

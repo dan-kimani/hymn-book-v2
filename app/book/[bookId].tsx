@@ -26,7 +26,7 @@ const BOOK_IDS = Object.keys(BOOK_INFO);
 
 export default function BookDetailScreen() {
   const insets = useSafeAreaInsets();
-  const { heading, caption, captionSmall } = useFontScale();
+  const { heading, body, bodyLarge, caption, captionSmall } = useFontScale();
   const { bookId } = useLocalSearchParams<{ bookId: string }>();
   const [hymns, setHymns] = useState<Array<{ id: string; number: number; title: string; snippet: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -149,9 +149,9 @@ export default function BookDetailScreen() {
             className="flex-row items-center px-4 py-3.5 border-b-hairline border-border-light dark:border-gray-800 gap-3"
             onPress={() => router.push({ pathname: "/hymn/[bookId]/[number]", params: { bookId: bookId!, number: String(item.number) } })}
           >
-            <Text className={`text-[15px] font-bold min-w-6 ${info.color}`}>{item.number}.</Text>
+            <Text className={`font-bold min-w-6 ${info.color}`} style={{ fontSize: body }}>{item.number}.</Text>
             <View className="flex-1">
-              <Text className="text-base text-text-primary dark:text-gray-100" numberOfLines={2}>
+              <Text className="text-text-primary dark:text-gray-100" numberOfLines={2} style={{ fontSize: bodyLarge }}>
                 <Text className="font-semibold">{item.title}</Text>
                 {item.snippet ? <Text className="text-text-secondary dark:text-gray-400"> {item.snippet}</Text> : null}
               </Text>

@@ -49,7 +49,7 @@ const BOOK_COUNTS: Record<string, number> = {
 export default function HymnReaderScreen() {
   const insets = useSafeAreaInsets();
   const { bookId, number, verse: targetVerse, stanza: targetStanza } = useLocalSearchParams<{ bookId: string; number: string; verse?: string; stanza?: string }>();
-  const { fontSize, heading, caption } = useFontScale();
+  const { fontSize, heading, body, caption, captionSmall } = useFontScale();
   const [hymn, setHymn] = useState<Hymn | null>(null);
   const scrollRef = useRef<any>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -474,9 +474,9 @@ export default function HymnReaderScreen() {
             <View className="items-center mb-4">
               <View className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
             </View>
-            <Text className="text-[17px] font-bold text-text-primary dark:text-gray-100 mb-4">Add to collection</Text>
+            <Text className="font-bold text-text-primary dark:text-gray-100 mb-4" style={{ fontSize: heading }}>Add to collection</Text>
             {collections.length === 0 ? (
-              <Text className="text-[13px] text-text-muted dark:text-gray-500 py-4">No collections yet. Create one in Saved.</Text>
+              <Text className="text-text-muted dark:text-gray-500 py-4" style={{ fontSize: caption }}>No collections yet. Create one in Saved.</Text>
             ) : (
               collections.map((col) => {
                 const added = col.hymns.some((h) => h.hymnId === hymnId);
@@ -499,8 +499,8 @@ export default function HymnReaderScreen() {
                   >
                     <Ionicons name={added ? "checkmark-circle" : "folder-outline"} size={20} color={added ? theme.primary : theme.textMuted} />
                     <View className="flex-1">
-                      <Text className="text-[15px] font-medium text-text-primary dark:text-gray-100">{col.name}</Text>
-                      <Text className="text-[12px] text-text-muted dark:text-gray-500">{col.hymns.length} hymns</Text>
+                      <Text className="font-medium text-text-primary dark:text-gray-100" style={{ fontSize: body }}>{col.name}</Text>
+                      <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>{col.hymns.length} hymns</Text>
                     </View>
                   </Pressable>
                 );
