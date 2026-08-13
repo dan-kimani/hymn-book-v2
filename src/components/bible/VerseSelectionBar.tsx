@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { BlurView } from "expo-blur";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Text } from "@/components/common/Text";
-import { Pressable, Share, TextInput, View } from "react-native";
+import { Animated, Pressable, Share, TextInput, View } from "react-native";
 
 import { useIsDark } from "@/hooks/useIsDark";
 import { useFontScale } from "@/hooks/useFontScale";
@@ -16,14 +16,29 @@ interface VerseSelectionBarProps {
   onAskAI?: () => void;
   verseCount: number;
   anchorY: number;
+  scrollY: Animated.Value;
 }
 
-export function VerseSelectionBar({ text, onBookmark, onCopy, onAskAI, verseCount, anchorY }: VerseSelectionBarProps) {
+export function VerseSelectionBar({ text, onBookmark, onCopy, onAskAI, verseCount, anchorY, scrollY }: VerseSelectionBarProps) {
   const isDark = useIsDark();
   const { caption, captionSmall } = useFontScale();
   const [writing, setWriting] = useState(false);
   const [note, setNote] = useState("");
   const [barHeight, setBarHeight] = useState(0);
+
+  // Follow the anchor verse 1:1 as the list scrolls, clamped below the header (>= 80).
+  // rawTop is the bar's screen top at scroll offset 0; the interpolation has slope -1
+  // so `top = rawTop - scrollY` across the whole scroll range (both directions),
+  // clamping at 80 once the verse passes under the floating header.
+  const top = useMemo(() => {
+    const rawTop = anchorY - barHeight - 12;
+    const clampScroll = rawTop - 80;
+    return scrollY.interpolate({
+      inputRange: [-1000, clampScroll],
+      outputRange: [rawTop + 1000, 80],
+      extrapolate: "clamp",
+    });
+  }, [anchorY, barHeight, scrollY]);
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(text);
@@ -46,13 +61,13 @@ export function VerseSelectionBar({ text, onBookmark, onCopy, onAskAI, verseCoun
   const border = "border border-gray-200/60 dark:border-slate-700/50";
 
   return (
-    <View
+    <Animated.View
       className="absolute z-20"
       style={{
         width: 220,
         left: "50%",
         transform: [{ translateX: -110 }],
-        top: Math.max(anchorY - barHeight - 12, 80),
+        top,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.6,
@@ -115,7 +130,7 @@ export function VerseSelectionBar({ text, onBookmark, onCopy, onAskAI, verseCoun
         <View className={`w-3 h-3 rotate-45 -mt-1.5 border-r border-b border-gray-200/60 dark:border-slate-700/50 ${blurBg}`} />
       </View>
 
-    </View>
+    </Animated.View>
   );
 }
 

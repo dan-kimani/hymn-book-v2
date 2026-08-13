@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Text } from "@/components/common/Text";
 import { Animated, Image, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -49,7 +49,18 @@ export default function HomeScreen() {
   const { body, bodySmall, caption, captionSmall } = useFontScale();
 
   const isDark = useIsDark();
-  const greeting = useMemo(() => getGreeting(), []);
+  const [greeting, setGreeting] = useState(() => getGreeting());
+
+  // Refresh the time-of-day greeting when its boundary is crossed.
+  useEffect(() => {
+    const id = setInterval(() => {
+      setGreeting((prev) => {
+        const next = getGreeting();
+        return next.text === prev.text ? prev : next;
+      });
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   // ── Combined scroll + focus animation ────────────────────
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -73,9 +84,17 @@ export default function HomeScreen() {
 
   // Trigger on focus / query changes
   const hasQuery = localQuery.length > 0;
+  const prevHasQuery = useRef(false);
   useEffect(() => {
+    // When search is cleared, reset the scroll offset + threshold state so the
+    // greeting header returns instead of staying hidden on the remounted ScrollView.
+    if (prevHasQuery.current && !hasQuery) {
+      scrollY.setValue(0);
+      scrolledPastRef.current = false;
+    }
+    prevHasQuery.current = hasQuery;
     syncAtTop();
-  }, [focused, hasQuery, syncAtTop]);
+  }, [focused, hasQuery, scrollY, syncAtTop]);
 
   const handleScroll = useRef(
     Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {

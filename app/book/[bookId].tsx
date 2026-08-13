@@ -61,15 +61,11 @@ export default function BookDetailScreen() {
   };
 
   // Edge-swipe-back
-  const touchStartX = useRef(0);
   const slideX = useRef(new Animated.Value(0)).current;
   const SW = Dimensions.get("window").width;
   const edgePan = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gs) => touchStartX.current < 30 && gs.dx > 15 && gs.dx > Math.abs(gs.dy) * 0.8,
-      onPanResponderGrant: (e) => {
-        touchStartX.current = e.nativeEvent.pageX;
-      },
+      onMoveShouldSetPanResponder: (_, gs) => gs.x0 < 30 && gs.dx > 15 && gs.dx > Math.abs(gs.dy) * 0.8,
       onPanResponderMove: (_, gs) => {
         if (gs.dx > 0) slideX.setValue(gs.dx);
       },
@@ -146,7 +142,6 @@ export default function BookDetailScreen() {
         initialNumToRender={25}
         maxToRenderPerBatch={15}
         windowSize={7}
-        getItemLayout={(_, index) => ({ length: 64, offset: 64 * index, index })}
         scrollEventThrottle={16}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
         renderItem={({ item }) => (

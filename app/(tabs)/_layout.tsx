@@ -31,7 +31,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: theme.textMuted,
         tabBarStyle: {
           position: "absolute",
-          bottom: insets.bottom + 10,
+          bottom: insets.bottom,
           left: 24,
           right: 24,
           borderRadius: 32,
@@ -58,11 +58,7 @@ export default function TabLayout() {
           <View style={{ flex: 1 }}>
             {/* Bottom-to-top glow — fades from opaque at screen bottom to transparent above tabs */}
             <LinearGradient
-              colors={
-                isDark
-                  ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.6)", "rgba(15,23,42,0.12)", "transparent"]
-                  : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.1)", "transparent"]
-              }
+              colors={isDark ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.6)", "rgba(15,23,42,0.12)", "transparent"] : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.1)", "transparent"]}
               locations={[0, 0.35, 0.7, 1]}
               start={{ x: 0, y: 1 }}
               end={{ x: 0, y: 0 }}
@@ -75,11 +71,7 @@ export default function TabLayout() {
               }}
               pointerEvents="none"
             />
-            <BlurView
-              intensity={30}
-              tint={isDark ? "dark" : "light"}
-              style={{ flex: 1, borderRadius: 32, overflow: "hidden" }}
-            />
+            <BlurView intensity={30} tint={isDark ? "dark" : "light"} style={{ flex: 1, borderRadius: 32, overflow: "hidden" }} />
           </View>
         ),
         tabBarLabelStyle: {

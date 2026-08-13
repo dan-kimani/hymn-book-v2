@@ -14,6 +14,7 @@ import { theme } from "@/theme/colors";
 
 interface CrossRefExplorerProps {
   visible: boolean;
+  bookId: number;
   bookName: string;
   chapter: number;
   crossRefsMap: Record<number, CrossReference[]>;
@@ -95,7 +96,7 @@ function RefVerseCard({ ref, captionSize, captionSmallSize, bodySize, onOpenInCh
   );
 }
 
-export function CrossRefExplorer({ visible, bookName, chapter, crossRefsMap, verses, onClose }: CrossRefExplorerProps) {
+export function CrossRefExplorer({ visible, bookId, bookName, chapter, crossRefsMap, verses, onClose }: CrossRefExplorerProps) {
   const insets = useSafeAreaInsets();
   const isDark = useIsDark();
   const { body, caption, captionSmall, fontSize } = useFontScale();
@@ -118,6 +119,8 @@ export function CrossRefExplorer({ visible, bookName, chapter, crossRefsMap, ver
   const handleOpenInChapter = useCallback(
     (ref: CrossReference) => {
       onClose();
+      // Already viewing this chapter — don't push a duplicate screen.
+      if (ref.bookId === bookId && ref.chapter === chapter) return;
       setTimeout(() => {
         router.push({
           pathname: "/bible/[bookId]/[chapter]" as any,
@@ -125,7 +128,7 @@ export function CrossRefExplorer({ visible, bookName, chapter, crossRefsMap, ver
         });
       }, 350);
     },
-    [onClose],
+    [onClose, bookId, chapter],
   );
 
   const handleChange = useCallback(

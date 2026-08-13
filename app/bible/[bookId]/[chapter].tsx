@@ -125,10 +125,10 @@ export default function BibleChapterScreen() {
     };
   }, [verses, selectedVerses, book?.name, book?.englishName, ch]);
 
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     setSelectionAnchor(null);
     setSelectedVerses(new Set());
-  };
+  }, []);
 
   const handleVersePress = (vs: number) => {
     // Not in selection mode — ignore taps
@@ -194,19 +194,29 @@ export default function BibleChapterScreen() {
   }, [highlightVerse, verses.length]);
 
   const handleRefPress = useCallback((ref: CrossReference) => {
+    if (ref.bookId === id && ref.chapter === ch) {
+      // Same chapter — highlight and scroll instead of pushing a duplicate screen.
+      setHighlightedVs(ref.verseStart);
+      const y = verseYs.current[ref.verseStart];
+      if (y != null) {
+        scrollRef.current?.scrollTo?.({ y: Math.max(y - 140, 0), animated: true });
+      }
+      return;
+    }
     router.push({
       pathname: "/bible/[bookId]/[chapter]" as any,
       params: { bookId: String(ref.bookId), chapter: String(ref.chapter), verse: String(ref.verseStart) },
     });
-  }, []);
+  }, [id, ch]);
 
   const goToChapter = useCallback(
     (newCh: number) => {
       if (newCh < 1 || newCh > totalChapters) return;
+      clearSelection();
       scrollRef.current?.scrollTo?.({ y: 0, animated: false });
       router.setParams({ bookId: String(id), chapter: String(newCh), verse: "" });
     },
-    [id, totalChapters],
+    [id, totalChapters, clearSelection],
   );
 
   const panResponder = useHorizontalSwipeNav({
@@ -355,7 +365,7 @@ export default function BibleChapterScreen() {
         )}
 
         {selectionAnchor != null && selectedVerses.size > 0 && (
-          <VerseSelectionBar text={`${selectionRef}\n\n${selectionText}`} verseCount={selectedVerses.size} anchorY={verseYs.current[selectionAnchor] ?? 200} onBookmark={handleBookmark} onCopy={handleCopied} onAskAI={() => setAiVisible(true)} />
+          <VerseSelectionBar text={`${selectionRef}\n\n${selectionText}`} verseCount={selectedVerses.size} anchorY={verseYs.current[selectionAnchor] ?? 200} scrollY={scrollY} onBookmark={handleBookmark} onCopy={handleCopied} onAskAI={() => setAiVisible(true)} />
         )}
       </View>
 
@@ -389,7 +399,7 @@ export default function BibleChapterScreen() {
 
       <AIStudyModal visible={aiVisible} reference={englishSelectionRef} onClose={() => setAiVisible(false)} />
 
-      <CrossRefExplorer visible={explorerVisible} bookName={book?.name ?? ""} chapter={ch} crossRefsMap={crossRefsMap} verses={verses} onClose={() => setExplorerVisible(false)} />
+      <CrossRefExplorer visible={explorerVisible} bookId={id} bookName={book?.name ?? ""} chapter={ch} crossRefsMap={crossRefsMap} verses={verses} onClose={() => setExplorerVisible(false)} />
     </View>
   );
 }

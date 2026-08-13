@@ -49,6 +49,17 @@ export default function BibleTab() {
     return () => clearTimeout(timer);
   }, [localQuery, setQuery]);
 
+  // Reset the scroll offset when entering/leaving search so the blur header
+  // doesn't stay opaque over a fresh results list.
+  const prevQueryEmpty = useRef(true);
+  useEffect(() => {
+    const nowEmpty = query.length === 0;
+    if (prevQueryEmpty.current !== nowEmpty) {
+      scrollY.setValue(0);
+    }
+    prevQueryEmpty.current = nowEmpty;
+  }, [query, scrollY]);
+
   const hasResults = !!(reference || bookResults.length || verseResults.length);
   const active = query.length > 0 && hasResults;
   const showSearching = query.length > 0 && searching && !hasResults;

@@ -69,7 +69,7 @@ export function AIStudyModal({ visible, reference, onClose }: AIStudyModalProps)
             style={{ flex: 1 }}
             javaScriptEnabled
             domStorageEnabled
-            onLoadEnd={() => setTimeout(() => setReady(true), 1000)}
+            onLoadEnd={() => setTimeout(() => setReady(true), 3000)}
             injectedJavaScript={`(function(){
               function hide(){
                 try{

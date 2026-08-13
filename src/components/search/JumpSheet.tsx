@@ -64,6 +64,7 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
       setSearching(false);
       return;
     }
+    let cancelled = false;
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
@@ -71,19 +72,27 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
         if (num) {
           const n = parseInt(num[1]);
           if (n >= 1 && n <= maxNum) {
-            setResults([{ hymnNumber: n, hymnTitle: `Hymn ${n}`, stanzaText: `Go to hymn ${n}`, bookId, bookName }]);
-            setSearching(false);
+            if (!cancelled) {
+              setResults([{ hymnNumber: n, hymnTitle: `Hymn ${n}`, stanzaText: `Go to hymn ${n}`, bookId, bookName }]);
+              setSearching(false);
+            }
             return;
           }
         }
-        setResults(await searchStanzas(query, [bookId], 20));
+        const res = await searchStanzas(query, [bookId], 20);
+        if (!cancelled) {
+          setResults(res);
+        }
       } catch {
         // ignore
       } finally {
-        setSearching(false);
+        if (!cancelled) setSearching(false);
       }
     }, 200);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [query, bookId, maxNum]);
 
   const handleSelect = useCallback(
