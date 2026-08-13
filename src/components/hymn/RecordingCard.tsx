@@ -1,0 +1,69 @@
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, View } from "react-native";
+
+import { Text } from "@/components/common/Text";
+import { useIsDark } from "@/hooks/useIsDark";
+import { usePlayback } from "@/hooks/usePlayback";
+import type { RecordingMeta } from "@/state/recordingsStore";
+import { theme } from "@/theme/colors";
+
+function formatTime(secs: number): string {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+// Stable pseudo-natural waveform shape — one thin bar per column, height in px.
+const WAVE_BARS = Array.from({ length: 120 }, (_, i) => {
+  const v = 0.5 + 0.5 * Math.sin(i * 0.16) * Math.sin(i * 0.06 + 1.2);
+  return Math.round(3 + v * 24);
+});
+
+interface RecordingCardProps {
+  recording: RecordingMeta;
+  onDelete: () => void;
+}
+
+export function RecordingCard({ recording, onDelete }: RecordingCardProps) {
+  const playback = usePlayback(recording.path);
+  const isDark = useIsDark();
+  const progress = recording.duration > 0 ? playback.currentTime / recording.duration : 0;
+  const playedCount = Math.floor(progress * WAVE_BARS.length);
+  const unplayedColor = isDark ? "#334155" : "#E2E8F0";
+
+  const handleDelete = () => {
+    playback.stop();
+    onDelete();
+  };
+
+  return (
+    <View className="mt-6 px-2">
+      <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-2">Recording</Text>
+
+      <View className="rounded-2xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4">
+        {/* Waveform */}
+        <View className="flex-row items-center gap-px h-4">
+          {WAVE_BARS.map((h, i) => (
+            <View key={i} className="flex-1 rounded-full" style={{ height: h, backgroundColor: i < playedCount ? theme.primary : unplayedColor }} />
+          ))}
+        </View>
+
+        {/* Controls */}
+        <View className="flex-row items-center mt-4">
+          <Pressable onPress={() => playback.toggle()} hitSlop={8} className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(249,115,22,0.12)" }}>
+            <Ionicons name={playback.isPlaying ? "pause" : "play"} size={18} color={theme.primary} style={{ marginLeft: playback.isPlaying ? 0 : 2 }} />
+          </Pressable>
+
+          <Text className="flex-1 text-center text-[13px] font-medium text-text-secondary dark:text-gray-400">
+            {formatTime(Math.round(playback.currentTime))}
+            <Text className="text-text-muted dark:text-gray-500"> / {formatTime(Math.round(recording.duration))}</Text>
+          </Text>
+
+          <Pressable onPress={handleDelete} hitSlop={8} className="w-8 h-8 rounded-full items-center justify-center bg-gray-100 dark:bg-slate-800">
+            <Ionicons name="trash-outline" size={16} color={theme.textMuted} />
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}

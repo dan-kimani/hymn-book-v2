@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { JumpSheet } from "@/components/search/JumpSheet";
 import { fetchHymn } from "@/data/queries";
 import type { Hymn } from "@/data/types";
-import { usePlayback, useRecorder } from "@/hooks/useRecorder";
+import { useRecorder } from "@/hooks/useRecorder";
 import { useFavoritesStore } from "@/state/favoritesStore";
 import { useRecentsStore } from "@/state/recentsStore";
 import { useCollectionsStore } from "@/state/collectionsStore";
@@ -23,6 +23,7 @@ import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { useIsDark } from "@/hooks/useIsDark";
 import { useHorizontalSwipeNav } from "@/hooks/useHorizontalSwipeNav";
 import { HymnShimmer } from "@/components/hymn/HymnShimmer";
+import { RecordingCard } from "@/components/hymn/RecordingCard";
 import { theme } from "@/theme/colors";
 
 const BOOK_NAMES: Record<string, string> = {
@@ -99,10 +100,6 @@ export default function HymnReaderScreen() {
   const recording = useRecordingsStore((s) => s.recordings[hymnId]);
   const setRecording = useRecordingsStore((s) => s.setRecording);
   const removeRecording = useRecordingsStore((s) => s.removeRecording);
-  // Playback state
-  const [playingPath, setPlayingPath] = useState<string | null>(null);
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const playback = usePlayback(playingPath);
 
   const deleteRecordingFile = (path: string | undefined) => {
     if (path) {
@@ -121,6 +118,8 @@ export default function HymnReaderScreen() {
           path: result.path,
           duration: result.duration,
           createdAt: Date.now(),
+          title: hymn?.title ?? "",
+          bookName,
         });
       }
     });
@@ -134,25 +133,9 @@ export default function HymnReaderScreen() {
     }
   };
 
-  const handlePlay = (rec: { id: string; path: string }) => {
-    if (playingId === rec.id) {
-      playback.toggle();
-    } else {
-      setPlayingId(rec.id);
-      setPlayingPath(rec.path);
-    }
-  };
-
-  const isActive = playingId === recording?.id;
-  const recDuration = recording?.duration ?? 0;
-  const progress = isActive && recDuration > 0 ? playback.currentTime / recDuration : 0;
-
   const handleDeleteRecording = () => {
-    playback.stop();
     deleteRecordingFile(recording?.path);
     removeRecording(hymnId);
-    setPlayingId(null);
-    setPlayingPath(null);
   };
 
   const formatTime = (secs: number) => {
@@ -208,9 +191,6 @@ export default function HymnReaderScreen() {
     if (isRecording) {
       finalizeRecording();
     }
-    playback.stop();
-    setPlayingId(null);
-    setPlayingPath(null);
     scrollRef.current?.scrollTo?.({ y: 0, animated: false });
     setHymn(null);
     router.setParams({ bookId: bookId!, number: String(num), verse: "", stanza: "" });
@@ -328,6 +308,11 @@ export default function HymnReaderScreen() {
               {hymn.title}
             </Text>
 
+            {/* Recording */}
+            {recording && (
+              <RecordingCard recording={recording} onDelete={handleDeleteRecording} />
+            )}
+
             {hymn.verses.map((verse, vi) => {
               const vn = verse.number ?? vi + 1;
               return (
@@ -367,38 +352,6 @@ export default function HymnReaderScreen() {
                 </View>
               );
             })}
-
-            {/* Recording */}
-            {recording && (
-              <View className="mt-6 px-2">
-                <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-2">Recording</Text>
-                <View className="rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 px-3 py-2.5">
-                  {/* Controls row */}
-                  <View className="flex-row items-center gap-2.5">
-                    <Pressable onPress={() => handlePlay(recording)} hitSlop={8}>
-                      <Ionicons name={isActive && playback.isPlaying ? "pause-circle" : "play-circle"} size={24} color={isActive && playback.isPlaying ? theme.primary : theme.textMuted} />
-                    </Pressable>
-
-                    <View className="flex-1">
-                      {/* Progress bar */}
-                      <View className="h-1 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
-                        <View className="h-full rounded-full bg-primary" style={{ width: `${isActive ? progress * 100 : 0}%` }} />
-                      </View>
-
-                      {/* Time + date */}
-                      <View className="flex-row justify-between mt-1.5">
-                        <Text className="text-[11px] text-text-muted dark:text-gray-500">{isActive ? formatTime(Math.round(playback.currentTime)) : formatTime(Math.round(recording.duration))}</Text>
-                        <Text className="text-[11px] text-text-muted dark:text-gray-500">{new Date(recording.createdAt).toLocaleDateString()}</Text>
-                      </View>
-                    </View>
-
-                    <Pressable onPress={handleDeleteRecording} hitSlop={8}>
-                      <Ionicons name="trash-outline" size={16} color={theme.textMuted} />
-                    </Pressable>
-                  </View>
-                </View>
-              </View>
-            )}
 
             <View className="h-28" />
           </Animated.ScrollView>

@@ -1,8 +1,6 @@
 import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
-  useAudioPlayer,
-  useAudioPlayerStatus,
   useAudioRecorder,
 } from "expo-audio";
 import * as FileSystem from "expo-file-system/legacy";
@@ -91,108 +89,14 @@ export function useRecorder(hymnId: string) {
     }
   }, [recorder]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount — only clear the timer. The recorder is released by
+  // useAudioRecorder's own cleanup, so calling recorder.stop() here would
+  // touch a released native object and crash.
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (recorder.isRecording) {
-        recorder.stop().catch(() => {});
-      }
     };
-  }, [recorder]);
+  }, []);
 
   return { isRecording, elapsed, start, stop };
-}
-
-/**
- * Hook that returns a player for the given file and play/pause controls.
- */
-export function usePlayback(filePath: string | null) {
-  const uri = filePath
-    ? filePath.startsWith("/") && !filePath.includes("://") ? `file://${filePath}` : filePath
-    : null;
-
-  const player = useAudioPlayer(uri ? { uri } : undefined);
-  const status = useAudioPlayerStatus(player);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const elapsedRef = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startedRef = useRef<string | null>(null);
-  const manualPlayRef = useRef(false);
-
-  const clearTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  // Stop the tick timer when the audio reaches the end, clamping to the duration.
-  useEffect(() => {
-    if (!status.didJustFinish) return;
-    const end = player.duration || elapsedRef.current;
-    setIsPlaying(false);
-    clearTimer();
-    elapsedRef.current = end;
-    setCurrentTime(end);
-  }, [status.didJustFinish, player]);
-
-  // Auto-play when uri changes
-  useEffect(() => {
-    if (!uri || startedRef.current === uri) return;
-    startedRef.current = uri;
-    manualPlayRef.current = false;
-    clearTimer();
-
-    const t = setTimeout(() => {
-      if (manualPlayRef.current) return; // user already toggled playback
-      player.play();
-      setIsPlaying(true);
-      elapsedRef.current = 0;
-      setCurrentTime(0);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [uri]);
-
-  // Tick elapsed time while playing
-  useEffect(() => {
-    if (isPlaying) {
-      timerRef.current = setInterval(() => {
-        elapsedRef.current += 0.5;
-        setCurrentTime(elapsedRef.current);
-      }, 500);
-    } else {
-      clearTimer();
-    }
-    return clearTimer;
-  }, [isPlaying]);
-
-  const toggle = useCallback(() => {
-    if (isPlaying) {
-      player.pause();
-      setIsPlaying(false);
-    } else {
-      manualPlayRef.current = true;
-      player.play();
-      elapsedRef.current = currentTime;
-      setIsPlaying(true);
-    }
-  }, [player, isPlaying, currentTime]);
-
-  const stop = useCallback(() => {
-    player.pause();
-    setIsPlaying(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    elapsedRef.current = 0;
-    setCurrentTime(0);
-  }, [player]);
-
-  // Reset on unmount
-  useEffect(() => clearTimer, []);
-
-  return { isPlaying, currentTime, toggle, stop };
 }

@@ -7,6 +7,8 @@ export interface RecordingMeta {
   path: string;
   duration: number;
   createdAt: number;
+  title?: string;
+  bookName?: string;
 }
 
 interface RecordingsState {
