@@ -161,7 +161,7 @@ export default function FavoritesScreen() {
             const emoji = defaultEmoji[item.id];
             return (
               <Pressable className="flex-row items-center gap-3 py-2.5 px-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 mb-2" onPress={() => router.push({ pathname: "/collection/[id]", params: { id: item.id } })}>
-                <View className="w-10 h-10 rounded-lg dark:bg-slate-800 items-center justify-center">{emoji ? <Text style={{ fontSize: 24 }}>{emoji}</Text> : <Ionicons name="folder-outline" size={18} color={theme.textMuted} />}</View>
+                <View className="w-10 h-10 rounded-lg  items-center justify-center">{emoji ? <Text style={{ fontSize: 24 }}>{emoji}</Text> : <Ionicons name="folder-outline" size={18} color={theme.textMuted} />}</View>
                 <View className="flex-1">
                   <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
                     {item.name}
