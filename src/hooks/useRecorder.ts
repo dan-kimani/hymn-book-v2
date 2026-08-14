@@ -1,19 +1,18 @@
-import {
-  RecordingPresets,
-  requestRecordingPermissionsAsync,
-  useAudioRecorder,
-} from "expo-audio";
+import { RecordingPresets, requestRecordingPermissionsAsync, useAudioRecorder } from "expo-audio";
 import * as FileSystem from "expo-file-system/legacy";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 
-export function useRecorder(hymnId: string) {
+import { sanitizeFileName } from "@/utils/filename";
+
+export function useRecorder(hymnId: string, title?: string) {
   const [isRecording, setIsRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [permissionGranted, setPermissionGranted] = useState(false);
   const elapsedRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startHymnIdRef = useRef(hymnId);
+  const startTitleRef = useRef(title);
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
@@ -38,6 +37,7 @@ export function useRecorder(hymnId: string) {
       await recorder.prepareToRecordAsync(RecordingPresets.HIGH_QUALITY);
       recorder.record();
       startHymnIdRef.current = hymnId;
+      startTitleRef.current = title;
       setIsRecording(true);
       elapsedRef.current = 0;
       setElapsed(0);
@@ -48,11 +48,12 @@ export function useRecorder(hymnId: string) {
     } catch (e: any) {
       Alert.alert("Error", e?.message ?? "Could not start recording.");
     }
-  }, [permissionGranted, recorder, hymnId]);
+  }, [permissionGranted, recorder, hymnId, title]);
 
-  const stop = useCallback(async (): Promise<{ path: string; duration: number; hymnId: string } | null> => {
+  const stop = useCallback(async (): Promise<{ path: string; duration: number; hymnId: string; title: string } | null> => {
     const duration = elapsedRef.current;
     const recordedHymnId = startHymnIdRef.current;
+    const recordedTitle = startTitleRef.current;
 
     // Stop the timer immediately
     if (timerRef.current) {
@@ -79,13 +80,21 @@ export function useRecorder(hymnId: string) {
 
     // Copy to managed directory for persistence, fall back to original URI
     try {
-      const dir = `${FileSystem.documentDirectory}recordings/${recordedHymnId}/`;
+      // The hymnId contains a colon (e.g. "roho-mutheru:42") — use a filesystem-safe
+      // directory name so the copy into the document directory succeeds.
+      const safeId = recordedHymnId.replace(/:/g, "-");
+      const dir = `${FileSystem.documentDirectory}recordings/${safeId}/`;
       await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
-      const dest = `${dir}${Date.now().toString(36)}.m4a`;
+      const base = sanitizeFileName(recordedTitle ?? "") || "recording";
+      const dest = `${dir}${base}.m4a`;
+      // Re-recording overwrites the same file — remove any existing one first.
+      await FileSystem.deleteAsync(dest, { idempotent: true });
       await FileSystem.copyAsync({ from: uri, to: dest });
-      return { path: dest, duration, hymnId: recordedHymnId };
-    } catch {
-      return { path: uri, duration, hymnId: recordedHymnId };
+      return { path: dest, duration, hymnId: recordedHymnId, title: recordedTitle ?? "" };
+    } catch (e: any) {
+      // Surface the real reason the copy failed so we can fix it.
+      Alert.alert("Recording copy failed", e?.message ?? String(e));
+      return { path: uri, duration, hymnId: recordedHymnId, title: recordedTitle ?? "" };
     }
   }, [recorder]);
 

@@ -1,5 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, View } from "react-native";
+import { File } from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import { Alert, Pressable, View } from "react-native";
 
 import { Text } from "@/components/common/Text";
 import { useIsDark } from "@/hooks/useIsDark";
@@ -36,6 +38,19 @@ export function RecordingCard({ recording, onDelete }: RecordingCardProps) {
     onDelete();
   };
 
+  const handleShare = async () => {
+    try {
+      const file = new File(recording.path);
+      if (!file.exists) {
+        Alert.alert("Recording missing", "The audio file could not be found.");
+        return;
+      }
+      await Sharing.shareAsync(recording.path, { mimeType: "audio/x-m4a" });
+    } catch (e: any) {
+      Alert.alert("Could not share", e?.message ?? "Something went wrong.");
+    }
+  };
+
   return (
     <View className="mt-6 px-2">
       <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-2">Recording</Text>
@@ -59,6 +74,9 @@ export function RecordingCard({ recording, onDelete }: RecordingCardProps) {
             <Text className="text-text-muted dark:text-gray-500"> / {formatTime(Math.round(recording.duration))}</Text>
           </Text>
 
+          <Pressable onPress={handleShare} hitSlop={8} className="w-8 h-8 rounded-full items-center justify-center bg-gray-100 dark:bg-slate-800 mr-2">
+            <Ionicons name="share-outline" size={16} color={theme.textMuted} />
+          </Pressable>
           <Pressable onPress={handleDelete} hitSlop={8} className="w-8 h-8 rounded-full items-center justify-center bg-gray-100 dark:bg-slate-800">
             <Ionicons name="trash-outline" size={16} color={theme.textMuted} />
           </Pressable>

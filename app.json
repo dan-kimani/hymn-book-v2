@@ -22,7 +22,13 @@
         "backgroundColor": "#122648"
       },
       "package": "app.frame.nyimbonakirikaniro",
-      "permissions": ["RECORD_AUDIO", "android.permission.RECORD_AUDIO", "android.permission.MODIFY_AUDIO_SETTINGS", "android.permission.FOREGROUND_SERVICE", "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"],
+      "permissions": [
+        "RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
       "versionCode": 10103,
       "allowBackup": true
     },
@@ -46,12 +52,17 @@
             "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
             "enableBundleCompression": true,
-            "buildArchs": ["arm64-v8a"],
-            "resourceConfigurations": ["en"]
+            "buildArchs": [
+              "arm64-v8a"
+            ],
+            "resourceConfigurations": [
+              "en"
+            ]
           }
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "expo-sharing"
     ],
     "extra": {
       "webClientId": "",

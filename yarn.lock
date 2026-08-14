@@ -693,7 +693,7 @@
   dependencies:
     node-forge "^1.3.3"
 
-"@expo/config-plugins@~57.0.7":
+"@expo/config-plugins@^57.0.7", "@expo/config-plugins@~57.0.7":
   version "57.0.7"
   resolved "https://registry.yarnpkg.com/@expo/config-plugins/-/config-plugins-57.0.7.tgz#7854e63d74e4e2b5dc157ef51d18489e078fcbd2"
   integrity sha512-jvXMiNuH8W7fmU9yCk4/jVwDX2G/5rWUg5PZ22mriccEeQVS9HJjQiUHivMaK6MxEG5L9f0RPScxe/nQfnpQvg==
@@ -2568,6 +2568,15 @@ expo-server@^57.0.2:
   version "57.0.2"
   resolved "https://registry.yarnpkg.com/expo-server/-/expo-server-57.0.2.tgz#b674ba4080383e378b36db2ac7fb5a6f78023722"
   integrity sha512-GzfiSHC19xU7I0Dq4O/7DOtWdmc14vynpxBb9nWDRvsF+7RjoSIdkVePFhx4Qm6ILFNbo6KxFGu95QnDdKxUdw==
+
+expo-sharing@~57.0.11:
+  version "57.0.11"
+  resolved "https://registry.yarnpkg.com/expo-sharing/-/expo-sharing-57.0.11.tgz#2f62e091f34b548ade4be442f3ef88d447a30152"
+  integrity sha512-Ukp6w/5bMnYkBAfNhINX6BgrcIoTZWArzUXiJZzvA22/hIPAGuQeSJLqrgeXHA0/2JP1A3PHH0Sls9OK7d4ecw==
+  dependencies:
+    "@expo/config-plugins" "^57.0.7"
+    "@expo/config-types" "^57.0.2"
+    "@expo/plist" "^0.8.1"
 
 expo-splash-screen@~57.0.6:
   version "57.0.6"

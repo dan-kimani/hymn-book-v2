@@ -6,7 +6,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { BottomGlow, TopGlow } from "@/components/SoftGlow";
 import { useEffect, useRef, useState } from "react";
 import { Text } from "@/components/common/Text";
-import { Animated, Modal, Pressable, Share, View } from "react-native";
+import { Alert, Animated, Modal, Pressable, Share, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { JumpSheet } from "@/components/search/JumpSheet";
@@ -96,7 +96,7 @@ export default function HymnReaderScreen() {
   const hymnId = `${bookId}:${number}`;
 
   // Recording
-  const { isRecording, elapsed, start, stop } = useRecorder(hymnId);
+  const { isRecording, elapsed, start, stop } = useRecorder(hymnId, hymn?.title);
   const recording = useRecordingsStore((s) => s.recordings[hymnId]);
   const setRecording = useRecordingsStore((s) => s.setRecording);
   const removeRecording = useRecordingsStore((s) => s.removeRecording);
@@ -110,15 +110,18 @@ export default function HymnReaderScreen() {
   const finalizeRecording = () => {
     stop().then((result) => {
       if (result) {
-        // Delete any previous recording for this hymn so re-recording doesn't orphan a file.
+        // Re-recording overwrites the same (title-named) file; only remove the previous
+        // file when it has a different name (e.g. a legacy timestamp-named recording).
         const prev = useRecordingsStore.getState().recordings[result.hymnId];
-        deleteRecordingFile(prev?.path);
+        if (prev?.path && prev.path !== result.path) {
+          deleteRecordingFile(prev.path);
+        }
         setRecording(result.hymnId, {
           id: Date.now().toString(36),
           path: result.path,
           duration: result.duration,
           createdAt: Date.now(),
-          title: hymn?.title ?? "",
+          title: result.title,
           bookName,
         });
       }
@@ -134,8 +137,17 @@ export default function HymnReaderScreen() {
   };
 
   const handleDeleteRecording = () => {
-    deleteRecordingFile(recording?.path);
-    removeRecording(hymnId);
+    Alert.alert("Delete recording?", "This will delete the recorded audio completely", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deleteRecordingFile(recording?.path);
+          removeRecording(hymnId);
+        },
+      },
+    ]);
   };
 
   const formatTime = (secs: number) => {
@@ -309,9 +321,7 @@ export default function HymnReaderScreen() {
             </Text>
 
             {/* Recording */}
-            {recording && (
-              <RecordingCard recording={recording} onDelete={handleDeleteRecording} />
-            )}
+            {recording && <RecordingCard recording={recording} onDelete={handleDeleteRecording} />}
 
             {hymn.verses.map((verse, vi) => {
               const vn = verse.number ?? vi + 1;
@@ -427,9 +437,13 @@ export default function HymnReaderScreen() {
             <View className="items-center mb-4">
               <View className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
             </View>
-            <Text className="font-bold text-text-primary dark:text-gray-100 mb-4" style={{ fontSize: heading }}>Add to collection</Text>
+            <Text className="font-bold text-text-primary dark:text-gray-100 mb-4" style={{ fontSize: heading }}>
+              Add to collection
+            </Text>
             {collections.length === 0 ? (
-              <Text className="text-text-muted dark:text-gray-500 py-4" style={{ fontSize: caption }}>No collections yet. Create one in Saved.</Text>
+              <Text className="text-text-muted dark:text-gray-500 py-4" style={{ fontSize: caption }}>
+                No collections yet. Create one in Saved.
+              </Text>
             ) : (
               collections.map((col) => {
                 const added = col.hymns.some((h) => h.hymnId === hymnId);
@@ -452,8 +466,12 @@ export default function HymnReaderScreen() {
                   >
                     <Ionicons name={added ? "checkmark-circle" : "folder-outline"} size={20} color={added ? theme.primary : theme.textMuted} />
                     <View className="flex-1">
-                      <Text className="font-medium text-text-primary dark:text-gray-100" style={{ fontSize: body }}>{col.name}</Text>
-                      <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>{col.hymns.length} hymns</Text>
+                      <Text className="font-medium text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+                        {col.name}
+                      </Text>
+                      <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                        {col.hymns.length} hymns
+                      </Text>
                     </View>
                   </Pressable>
                 );
