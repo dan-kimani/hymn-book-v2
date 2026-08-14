@@ -12,6 +12,7 @@ import { VarelaRound_400Regular } from "@expo-google-fonts/varela-round";
 
 import { useBibleStore } from "@/state/bibleStore";
 import { useSettingsStore } from "@/state/settingsStore";
+import { useAutoBackup } from "@/hooks/useAutoBackup";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -28,6 +29,9 @@ export default function RootLayout() {
   // Prefetch bible books into Zustand so Bible tab renders instantly
   const loadBooks = useBibleStore((s) => s.loadBooks);
   useEffect(() => { loadBooks(); }, []);
+
+  // Trigger a scheduled backup on launch and on return to foreground.
+  useAutoBackup();
 
   // Sync uniwind's theme with our Zustand store so dark: classes resolve correctly.
   // Pass the raw mode ("system" included) so uniwind stays adaptive on system changes.

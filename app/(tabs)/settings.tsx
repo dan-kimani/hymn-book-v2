@@ -1,12 +1,18 @@
-import { Text } from "@/components/common/Text";
-import { Pressable, ScrollView, Switch, View } from "react-native";
+import { BlurView } from "expo-blur";
+import { useRef } from "react";
+import { Animated, Pressable, Switch, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { Text } from "@/components/common/Text";
 
 import type { BookId } from "@/data/types";
 import { useSettingsStore } from "@/state/settingsStore";
 import { useFontScale } from "@/hooks/useFontScale";
+import { useIsDark } from "@/hooks/useIsDark";
 import { FontSizePill } from "@/components/common/FontSizePill";
 import { SectionLabel } from "@/components/common/SectionLabel";
+import { BackupSection } from "@/components/settings/BackupSection";
+import { TopGlow } from "@/components/SoftGlow";
 import { theme } from "@/theme/colors";
 
 const SEARCH_BOOKS: { id: BookId; name: string; count: number }[] = [
@@ -19,6 +25,15 @@ const SEARCH_BOOKS: { id: BookId; name: string; count: number }[] = [
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { fontSize, body, bodySmall, caption, captionSmall } = useFontScale();
+  const isDark = useIsDark();
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerHeight = insets.top + 68;
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 40],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
 
   const themeMode = useSettingsStore((s) => s.themeMode);
   const setThemeMode = useSettingsStore((s) => s.setThemeMode);
@@ -28,14 +43,28 @@ export default function SettingsScreen() {
   const toggleSearchBook = useSettingsStore((s) => s.toggleSearchBook);
 
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950" style={{}}>
-      <View className="px-6 pb-4" style={{ paddingTop: insets.top + 12 }}>
-        <Text className="font-extrabold tracking-tight text-text-primary dark:text-gray-100" style={{ fontSize: fontSize + 14 }}>
-          Settings
-        </Text>
-      </View>
+    <View className="flex-1 bg-white dark:bg-slate-950">
+      {/* Floating header — fades in on scroll */}
+      <Animated.View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top + 8 }}>
+        <TopGlow height={headerHeight + 90} opacity={headerOpacity} />
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
+          <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
+        </Animated.View>
+
+        <View className="px-6 pb-4">
+          <Text className="font-extrabold tracking-tight text-text-primary dark:text-gray-100" style={{ fontSize: fontSize + 14 }}>
+            Settings
+          </Text>
+        </View>
+      </Animated.View>
+
+      <Animated.ScrollView
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: headerHeight, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+      >
         {/* Appearance */}
         <SectionLabel className="mb-3 ml-1">Appearance</SectionLabel>
         <View className="flex-row gap-2 mb-8">
@@ -104,11 +133,13 @@ export default function SettingsScreen() {
           ))}
         </View>
 
+        <BackupSection />
+
         {/* About */}
         <Text className="text-text-muted dark:text-gray-500 text-center" style={{ fontSize: caption }}>
           2,008 hymns across 4 books
         </Text>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }
