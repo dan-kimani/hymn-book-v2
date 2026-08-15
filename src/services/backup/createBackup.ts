@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { File, Paths } from "expo-file-system";
-import { strToU8, zipSync } from "fflate";
+import { strToU8, zip } from "fflate";
 
 import type { RecordingMeta } from "@/state/recordingsStore";
 import { BACKUP_CACHE_FILENAME, DATA_STORE_KEYS } from "./constants";
@@ -11,6 +11,13 @@ import {
   type BackupRecordingEntry,
   type BackupStorePayload,
 } from "./backupManifest";
+
+/** Promise wrapper around fflate's async `zip`, which yields between chunks instead of blocking the JS thread. */
+function zipAsync(data: Record<string, Uint8Array>): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    zip(data, { level: 6 }, (err, out) => (err ? reject(err) : resolve(out)));
+  });
+}
 
 export interface BackupArchive {
   uri: string;
@@ -64,10 +71,7 @@ export async function createBackupArchive(): Promise<BackupArchive> {
     recordings: entries,
   });
 
-  const zipBytes = zipSync(
-    { "backup.json": strToU8(JSON.stringify(manifest)), ...files },
-    { level: 6 },
-  );
+  const zipBytes = await zipAsync({ "backup.json": strToU8(JSON.stringify(manifest)), ...files });
 
   // 4. Write the archive to cache for upload.
   const out = new File(Paths.cache, BACKUP_CACHE_FILENAME);

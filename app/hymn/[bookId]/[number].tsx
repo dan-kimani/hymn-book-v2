@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import * as Clipboard from "expo-clipboard";
 import * as FileSystem from "expo-file-system/legacy";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { BottomGlow, TopGlow } from "@/components/SoftGlow";
 import { useEffect, useRef, useState } from "react";
 import { Text } from "@/components/common/Text";
@@ -51,10 +51,11 @@ export default function HymnReaderScreen() {
   const insets = useSafeAreaInsets();
   const { bookId, number, verse: targetVerse, stanza: targetStanza } = useLocalSearchParams<{ bookId: string; number: string; verse?: string; stanza?: string }>();
   const { fontSize, heading, body, caption, captionSmall } = useFontScale();
-  const [hymn, setHymn] = useState<Hymn | null>(null);
+  const [hymnData, setHymnData] = useState<{ key: string; hymn: Hymn } | null>(null);
   const scrollRef = useRef<any>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const isDark = useIsDark();
+  const navigation = useNavigation();
 
   // Quick-jump / search sheet
   const [jumpVisible, setJumpVisible] = useState(false);
@@ -94,6 +95,7 @@ export default function HymnReaderScreen() {
 
   const bookName = BOOK_NAMES[bookId ?? ""] ?? bookId ?? "";
   const hymnId = `${bookId}:${number}`;
+  const hymn = hymnData?.key === hymnId ? hymnData.hymn : null;
 
   // Recording
   const { isRecording, elapsed, start, stop } = useRecorder(hymnId, hymn?.title);
@@ -107,26 +109,51 @@ export default function HymnReaderScreen() {
     }
   };
 
-  const finalizeRecording = () => {
-    stop().then((result) => {
-      if (result) {
-        // Re-recording overwrites the same (title-named) file; only remove the previous
-        // file when it has a different name (e.g. a legacy timestamp-named recording).
-        const prev = useRecordingsStore.getState().recordings[result.hymnId];
-        if (prev?.path && prev.path !== result.path) {
-          deleteRecordingFile(prev.path);
-        }
-        setRecording(result.hymnId, {
-          id: Date.now().toString(36),
-          path: result.path,
-          duration: result.duration,
-          createdAt: Date.now(),
-          title: result.title,
-          bookName,
-        });
+  const finalizeRecording = async () => {
+    const result = await stop();
+    if (result) {
+      // Re-recording overwrites the same (title-named) file; only remove the previous
+      // file when it has a different name (e.g. a legacy timestamp-named recording).
+      const prev = useRecordingsStore.getState().recordings[result.hymnId];
+      if (prev?.path && prev.path !== result.path) {
+        deleteRecordingFile(prev.path);
       }
-    });
+      setRecording(result.hymnId, {
+        id: Date.now().toString(36),
+        path: result.path,
+        duration: result.duration,
+        createdAt: Date.now(),
+        title: result.title,
+        bookName,
+      });
+    }
   };
+
+  // Finalize an in-progress recording before the screen is removed (header back,
+  // hardware back, tab switch, router.replace) so the take is never silently lost.
+  const finalizeRecordingRef = useRef(finalizeRecording);
+  finalizeRecordingRef.current = finalizeRecording;
+  const isRecordingRef = useRef(isRecording);
+  isRecordingRef.current = isRecording;
+  const navigatingRef = useRef(false);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
+      if (!isRecordingRef.current) return; // not recording — allow removal
+      e.preventDefault();
+      if (navigatingRef.current) return; // already finalizing — ignore re-entry
+      navigatingRef.current = true;
+      (async () => {
+        try {
+          await finalizeRecordingRef.current();
+        } finally {
+          isRecordingRef.current = false;
+          navigation.dispatch(e.data.action);
+        }
+      })();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const handleMicPress = () => {
     if (isRecording) {
@@ -175,7 +202,7 @@ export default function HymnReaderScreen() {
     (async () => {
       const data = await fetchHymn(hymnId);
       if (!cancelled && data) {
-        setHymn(data);
+        setHymnData({ key: hymnId, hymn: data });
         addRecent({ hymnId, bookId: bookId!, bookName, number: currentNum, title: data.title });
       }
     })();
@@ -204,7 +231,6 @@ export default function HymnReaderScreen() {
       finalizeRecording();
     }
     scrollRef.current?.scrollTo?.({ y: 0, animated: false });
-    setHymn(null);
     router.setParams({ bookId: bookId!, number: String(num), verse: "", stanza: "" });
   };
 

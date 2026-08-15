@@ -43,12 +43,19 @@ function RefVerseCard({ ref, captionSize, captionSmallSize, bodySize, onOpenInCh
     if (!expanded || refText !== null) return;
     let cancelled = false;
     setLoading(true);
-    fetchBibleVerse(ref.bookId, ref.chapter, ref.verseStart).then((v) => {
-      if (!cancelled) {
-        setRefText(v?.text ?? null);
-        setLoading(false);
-      }
-    });
+    fetchBibleVerse(ref.bookId, ref.chapter, ref.verseStart)
+      .then((v) => {
+        if (!cancelled) {
+          setRefText(v?.text ?? null);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRefText(null);
+          setLoading(false);
+        }
+      });
     return () => {
       cancelled = true;
     };

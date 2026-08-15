@@ -29,8 +29,12 @@ export default function BookDetailScreen() {
   const insets = useSafeAreaInsets();
   const { heading, body, bodyLarge, caption, captionSmall } = useFontScale();
   const { bookId } = useLocalSearchParams<{ bookId: string }>();
-  const [hymns, setHymns] = useState<Array<{ id: string; number: number; title: string; snippet: string }>>([]);
-  const [loading, setLoading] = useState(true);
+  const [hymnData, setHymnData] = useState<{
+    key: string;
+    hymns: Array<{ id: string; number: number; title: string; snippet: string }>;
+  } | null>(null);
+  const hymns = hymnData?.key === bookId ? hymnData.hymns : [];
+  const loading = hymnData?.key !== bookId;
   const [jumpVisible, setJumpVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const isDark = useIsDark();
@@ -46,8 +50,6 @@ export default function BookDetailScreen() {
   const nextBookId = currentBookIdx < BOOK_IDS.length - 1 ? BOOK_IDS[currentBookIdx + 1] : null;
 
   const goToBook = (id: string) => {
-    setHymns([]);
-    setLoading(true);
     router.setParams({ bookId: id });
   };
 
@@ -89,9 +91,9 @@ export default function BookDetailScreen() {
     (async () => {
       try {
         const data = await fetchHymnMeta(bookId!);
-        if (!cancelled) { setHymns(data); setLoading(false); }
+        if (!cancelled) setHymnData({ key: bookId, hymns: data });
       } catch {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setHymnData({ key: bookId, hymns: [] });
       }
     })();
     return () => { cancelled = true; };

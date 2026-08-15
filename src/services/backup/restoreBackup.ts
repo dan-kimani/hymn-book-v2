@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { File, Paths } from "expo-file-system";
-import { strFromU8, unzipSync } from "fflate";
+import { strFromU8, unzip } from "fflate";
 
 import { useBibleBookmarksStore } from "@/state/bibleBookmarksStore";
 import { useCollectionsStore } from "@/state/collectionsStore";
@@ -11,6 +11,13 @@ import { useSettingsStore } from "@/state/settingsStore";
 import { downloadBackup, listBackup } from "@/services/drive/driveApi";
 import { DATA_STORE_KEYS, type DataStoreKey, RESTORE_CACHE_FILENAME } from "./constants";
 import { parseManifest, type BackupManifest } from "./backupManifest";
+
+/** Promise wrapper around fflate's async `unzip`, which yields between chunks instead of blocking the JS thread. */
+function unzipAsync(data: Uint8Array): Promise<Record<string, Uint8Array>> {
+  return new Promise((resolve, reject) => {
+    unzip(data, (err, out) => (err ? reject(err) : resolve(out)));
+  });
+}
 
 /** The zustand `persist` stores that must be rehydrated after AsyncStorage is rewritten. */
 const STORES = [
@@ -46,7 +53,7 @@ export async function restoreBackup(token: string): Promise<RestoreResult> {
   const zipFile = new File(Paths.cache, RESTORE_CACHE_FILENAME);
   try {
     await downloadBackup(token, existing.id, zipFile);
-    const unzipped = unzipSync(await zipFile.bytes());
+    const unzipped = await unzipAsync(await zipFile.bytes());
     const manifestBytes = unzipped["backup.json"];
     if (!manifestBytes) throw new Error("Backup manifest missing");
     const manifest = parseManifest(strFromU8(manifestBytes));

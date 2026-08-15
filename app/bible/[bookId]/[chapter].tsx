@@ -8,8 +8,8 @@ import { Text } from "@/components/common/Text";
 import { Animated, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { BibleVerse, CrossReference } from "@/data/bibleTypes";
-import { useBibleStore } from "@/state/bibleStore";
+import type { BibleBook, BibleVerse, CrossReference } from "@/data/bibleTypes";
+import { fetchBibleBook, fetchBibleChapter, fetchCrossReferences } from "@/data/bibleQueries";
 import { useBibleBookmarksStore } from "@/state/bibleBookmarksStore";
 import { theme } from "@/theme/colors";
 import { useFontScale } from "@/hooks/useFontScale";
@@ -96,11 +96,21 @@ export default function BibleChapterScreen() {
   const isDark = useIsDark();
   const { fontSize, heading, bodySmall, captionSmall } = useFontScale();
 
-  const verses = useBibleStore((s) => s.verses);
-  const book = useBibleStore((s) => s.book);
-  const crossRefsMap = useBibleStore((s) => s.crossRefsMap);
-  const totalChapters = useBibleStore((s) => s.totalChapters);
-  const loadChapter = useBibleStore((s) => s.loadChapter);
+  const currentKey = `${id}:${ch}`;
+  const [chapterData, setChapterData] = useState<{
+    key: string;
+    book: BibleBook | null;
+    verses: BibleVerse[];
+    crossRefsMap: Record<number, CrossReference[]>;
+    totalChapters: number;
+  } | null>(null);
+
+  // Derive the visible chapter from the current route key — no reset effect needed:
+  // when id/ch change, this naturally falls back to empty (shimmer) until fetch lands.
+  const book = chapterData?.key === currentKey ? chapterData.book : null;
+  const verses = chapterData?.key === currentKey ? chapterData.verses : [];
+  const crossRefsMap = chapterData?.key === currentKey ? chapterData.crossRefsMap : {};
+  const totalChapters = chapterData?.key === currentKey ? chapterData.totalChapters : 0;
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -178,8 +188,33 @@ export default function BibleChapterScreen() {
   };
 
   useEffect(() => {
-    loadChapter(id, ch);
-  }, [id, ch, loadChapter]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const [bk, vs, crs] = await Promise.all([
+          fetchBibleBook(id),
+          fetchBibleChapter(id, ch),
+          fetchCrossReferences(id, ch),
+        ]);
+        if (cancelled) return;
+        const map: Record<number, CrossReference[]> = {};
+        for (const cr of crs) {
+          const vsN = cr.sourceVerse;
+          if (!map[vsN]) map[vsN] = [];
+          map[vsN].push(cr);
+        }
+        setChapterData({ key: currentKey, book: bk, verses: vs, crossRefsMap: map, totalChapters: bk?.chapters ?? 0 });
+      } catch (e) {
+        console.error("[chapter.load]", e);
+        if (!cancelled) {
+          setChapterData({ key: currentKey, book: null, verses: [], crossRefsMap: {}, totalChapters: 0 });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, ch]);
 
   // Sync + auto-scroll to highlighted verse on cross-reference navigation
   useEffect(() => {

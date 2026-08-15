@@ -53,7 +53,7 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
   // Preload hymns when visible
   useEffect(() => {
     if (visible && allHymns.length === 0) {
-      fetchHymnMeta(bookId).then(setAllHymns);
+      fetchHymnMeta(bookId).then(setAllHymns).catch(() => {});
     }
   }, [visible, bookId, allHymns.length]);
 
