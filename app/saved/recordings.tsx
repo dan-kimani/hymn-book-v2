@@ -1,8 +1,8 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Text } from "@/components/common/Text";
-import { SectionList, Pressable, View } from "react-native";
+import { Modal, Pressable, ScrollView, SectionList, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useRecordingsStore } from "@/state/recordingsStore";
@@ -45,15 +45,43 @@ const WAVE_BARS = Array.from({ length: 60 }, (_, i) => {
 export default function RecordingsListScreen() {
   const insets = useSafeAreaInsets();
   const isDark = useIsDark();
-  const { fontSize, body, captionSmall } = useFontScale();
+  const { fontSize, body, captionSmall, heading } = useFontScale();
   const recordings = useRecordingsStore((s) => s.recordings);
-  const { activeDayKey, currentHymnId, currentTitle, isPlaying, position, duration, playFrom, next, prev, seekTo, toggle, canNext, canPrev, loopMode, cycleLoop } = useDayPlaylist();
+  const {
+    activeDayKey,
+    currentHymnId,
+    currentTitle,
+    isPlaying,
+    position,
+    duration,
+    playFrom,
+    next,
+    prev,
+    seekTo,
+    toggle,
+    canNext,
+    canPrev,
+    loopMode,
+    cycleLoop,
+    shuffle,
+    toggleShuffle,
+    speed,
+    cycleSpeed,
+    sleepMinutes,
+    cycleSleepTimer,
+    queue,
+    index,
+    jumpTo,
+  } = useDayPlaylist();
   const barWidthRef = useRef(0);
+  const modalBarWidthRef = useRef(0);
   const progress = duration > 0 ? Math.min(position / duration, 1) : 0;
   const currentPath = currentHymnId ? recordings[currentHymnId]?.path : null;
   const currentUri = currentPath ? (currentPath.startsWith("file://") ? currentPath : `file://${currentPath}`) : null;
   const peaks = useWaveform(currentUri);
   const bars = peaks.length > 0 ? peaks : WAVE_BARS.map((h) => h / 24);
+  const [playerVisible, setPlayerVisible] = useState(false);
+  const [queueVisible, setQueueVisible] = useState(false);
 
   const recordedHymns = Object.entries(recordings)
     .filter(([, rec]) => rec != null)
@@ -110,23 +138,41 @@ export default function RecordingsListScreen() {
             <View className="flex-row items-center justify-between pt-5 pb-2">
               <Text className="text-text-muted text-[11px] font-semibold tracking-[1.5px] dark:text-gray-500">{section.title}</Text>
               <View className="flex-row items-center gap-1.5">
-                <Pressable onPress={prev} disabled={!canPrev} hitSlop={8} className={`h-8 w-8 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20 ${!canPrev ? "opacity-30" : ""}`}>
+                <Pressable
+                  onPress={prev}
+                  disabled={!canPrev}
+                  hitSlop={8}
+                  className={`bg-primary/10 dark:bg-primary/20 h-8 w-8 items-center justify-center rounded-full ${!canPrev ? "opacity-30" : ""}`}
+                >
                   <Ionicons name="play-skip-back" size={14} color={theme.primary} />
                 </Pressable>
                 <Pressable
                   onPress={() => playFrom(section.title ?? "", section.data, 0)}
                   hitSlop={8}
-                  className="h-8 w-8 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20"
+                  className="bg-primary/10 dark:bg-primary/20 h-8 w-8 items-center justify-center rounded-full"
                 >
                   <Ionicons name={active && isPlaying ? "pause" : "play"} size={14} color={theme.primary} />
                 </Pressable>
-                <Pressable onPress={next} disabled={!canNext} hitSlop={8} className={`h-8 w-8 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20 ${!canNext ? "opacity-30" : ""}`}>
+                <Pressable
+                  onPress={next}
+                  disabled={!canNext}
+                  hitSlop={8}
+                  className={`bg-primary/10 dark:bg-primary/20 h-8 w-8 items-center justify-center rounded-full ${!canNext ? "opacity-30" : ""}`}
+                >
                   <Ionicons name="play-skip-forward" size={14} color={theme.primary} />
                 </Pressable>
-                <Pressable onPress={cycleLoop} hitSlop={8} className="relative h-8 w-8 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20">
-                  <Ionicons name={loopMode === "off" ? "repeat-outline" : "repeat"} size={14} color={loopMode === "off" ? theme.textMuted : theme.primary} />
+                <Pressable
+                  onPress={cycleLoop}
+                  hitSlop={8}
+                  className="bg-primary/10 dark:bg-primary/20 relative h-8 w-8 items-center justify-center rounded-full"
+                >
+                  <Ionicons
+                    name={loopMode === "off" ? "repeat-outline" : "repeat"}
+                    size={14}
+                    color={loopMode === "off" ? theme.textMuted : theme.primary}
+                  />
                   {loopMode === "one" && (
-                    <Text className="absolute right-1 top-1 text-[7px] font-bold leading-none" style={{ color: theme.primary }}>
+                    <Text className="absolute top-1 right-1 text-[7px] leading-none font-bold" style={{ color: theme.primary }}>
                       1
                     </Text>
                   )}
@@ -160,7 +206,7 @@ export default function RecordingsListScreen() {
                 {isActive && (
                   <>
                     <View className="mt-1 h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700">
-                      <View className="h-1 rounded-full bg-primary" style={{ width: `${progress * 100}%` }} />
+                      <View className="bg-primary h-1 rounded-full" style={{ width: `${progress * 100}%` }} />
                     </View>
                     <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
                       {formatTime(position)} / {formatTime(duration)}
@@ -185,11 +231,17 @@ export default function RecordingsListScreen() {
       />
 
       {currentTitle && (
-        <View className="absolute bottom-0 left-0 right-0 px-4" style={{ paddingBottom: insets.bottom + 10 }}>
+        <View className="absolute right-0 bottom-0 left-0 px-4" style={{ paddingBottom: insets.bottom + 10 }}>
           <View className="rounded-2xl border border-gray-100 bg-white p-3 shadow-lg dark:border-slate-800 dark:bg-slate-900">
-            <Text className="text-text-primary mb-1 font-semibold dark:text-gray-100" numberOfLines={1} style={{ fontSize: captionSmall }}>
-              {currentTitle}
-            </Text>
+            <Pressable onPress={() => setPlayerVisible(true)} hitSlop={8}>
+              <Text
+                className="text-text-primary mb-1 font-semibold dark:text-gray-100"
+                numberOfLines={1}
+                style={{ fontSize: captionSmall }}
+              >
+                {currentTitle}
+              </Text>
+            </Pressable>
             <Pressable
               onLayout={(e) => {
                 barWidthRef.current = e.nativeEvent.layout.width;
@@ -205,7 +257,10 @@ export default function RecordingsListScreen() {
                   <View
                     key={i}
                     className="flex-1 rounded-full"
-                    style={{ height: Math.max(3, Math.round(peak * 24)), backgroundColor: played ? theme.primary : isDark ? "#334155" : "#E2E8F0" }}
+                    style={{
+                      height: Math.max(3, Math.round(peak * 24)),
+                      backgroundColor: played ? theme.primary : isDark ? "#334155" : "#E2E8F0",
+                    }}
                   />
                 );
               })}
@@ -218,20 +273,42 @@ export default function RecordingsListScreen() {
                 {formatTime(duration)}
               </Text>
             </View>
-            <View className="mt-2 flex-row items-center justify-center gap-5">
+            <View className="mt-2 flex-row items-center justify-center gap-6">
               <Pressable onPress={prev} disabled={!canPrev} hitSlop={8} className={!canPrev ? "opacity-30" : ""}>
-                <Ionicons name="play-skip-back" size={20} color={theme.primary} />
+                <Ionicons name="play-skip-back" size={22} color={theme.primary} />
               </Pressable>
-              <Pressable onPress={toggle} hitSlop={8} className="h-9 w-9 items-center justify-center rounded-full bg-primary">
-                <Ionicons name={isPlaying ? "pause" : "play"} size={18} color="#fff" style={{ marginLeft: isPlaying ? 0 : 2 }} />
+              <Pressable onPress={toggle} hitSlop={8} className="bg-primary h-10 w-10 items-center justify-center rounded-full">
+                <Ionicons name={isPlaying ? "pause" : "play"} size={20} color="#fff" style={{ marginLeft: isPlaying ? 0 : 2 }} />
               </Pressable>
               <Pressable onPress={next} disabled={!canNext} hitSlop={8} className={!canNext ? "opacity-30" : ""}>
-                <Ionicons name="play-skip-forward" size={20} color={theme.primary} />
+                <Ionicons name="play-skip-forward" size={22} color={theme.primary} />
+              </Pressable>
+            </View>
+            <View className="mt-1 flex-row items-center justify-center gap-4">
+              <Pressable onPress={toggleShuffle} hitSlop={8} className="h-8 w-8 items-center justify-center">
+                <Ionicons name="shuffle" size={16} color={shuffle ? theme.primary : theme.textMuted} />
+              </Pressable>
+              <Pressable onPress={cycleSpeed} hitSlop={8} className="h-8 min-w-8 items-center justify-center px-1">
+                <Text className="font-semibold" style={{ fontSize: captionSmall, color: speed === 1 ? theme.textMuted : theme.primary }}>
+                  {speed}x
+                </Text>
+              </Pressable>
+              <Pressable onPress={cycleSleepTimer} hitSlop={8} className="h-8 flex-row items-center justify-center gap-0.5 px-1">
+                <Ionicons name={sleepMinutes ? "moon" : "moon-outline"} size={15} color={sleepMinutes ? theme.primary : theme.textMuted} />
+                {sleepMinutes && (
+                  <Text className="font-semibold" style={{ fontSize: captionSmall, color: theme.primary }}>
+                    {sleepMinutes}m
+                  </Text>
+                )}
               </Pressable>
               <Pressable onPress={cycleLoop} hitSlop={8} className="relative h-8 w-8 items-center justify-center">
-                <Ionicons name={loopMode === "off" ? "repeat-outline" : "repeat"} size={20} color={loopMode === "off" ? theme.textMuted : theme.primary} />
+                <Ionicons
+                  name={loopMode === "off" ? "repeat-outline" : "repeat"}
+                  size={16}
+                  color={loopMode === "off" ? theme.textMuted : theme.primary}
+                />
                 {loopMode === "one" && (
-                  <Text className="absolute right-0 top-0 text-[8px] font-bold leading-none" style={{ color: theme.primary }}>
+                  <Text className="absolute top-0 right-0 text-[8px] leading-none font-bold" style={{ color: theme.primary }}>
                     1
                   </Text>
                 )}
@@ -240,6 +317,155 @@ export default function RecordingsListScreen() {
           </View>
         </View>
       )}
+
+      <Modal visible={playerVisible} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setPlayerVisible(false)}>
+        <View className="flex-1 bg-white dark:bg-slate-950" style={{ paddingTop: insets.top + 8 }}>
+          <View className="flex-row items-center justify-between px-4 pb-2">
+            <Pressable onPress={() => setPlayerVisible(false)} hitSlop={8} className="h-9 w-9 items-center justify-center">
+              <Ionicons name="chevron-down" size={26} color={isDark ? "#94A3B8" : theme.textSecondary} />
+            </Pressable>
+            <Text
+              className="text-text-primary flex-1 px-3 text-center font-bold dark:text-gray-100"
+              numberOfLines={1}
+              style={{ fontSize: heading }}
+            >
+              {currentTitle}
+            </Text>
+            <Pressable onPress={() => setQueueVisible(true)} hitSlop={8} className="h-9 w-9 items-center justify-center">
+              <Ionicons name="list" size={24} color={isDark ? "#94A3B8" : theme.textSecondary} />
+            </Pressable>
+          </View>
+
+          <View className="flex-1 justify-center px-8">
+            <Text className="text-text-muted mb-2 font-medium dark:text-gray-500" style={{ fontSize: captionSmall }}>
+              {currentHymnId}
+            </Text>
+            <Pressable
+              onLayout={(e) => {
+                modalBarWidthRef.current = e.nativeEvent.layout.width;
+              }}
+              onPress={(e) => {
+                if (modalBarWidthRef.current > 0) seekTo((e.nativeEvent.locationX / modalBarWidthRef.current) * duration);
+              }}
+              className="h-16 flex-row items-center gap-px"
+            >
+              {bars.map((peak, i) => {
+                const played = i < Math.floor(progress * bars.length);
+                return (
+                  <View
+                    key={i}
+                    className="flex-1 rounded-full"
+                    style={{
+                      height: Math.max(3, Math.round(peak * 40)),
+                      backgroundColor: played ? theme.primary : isDark ? "#334155" : "#E2E8F0",
+                    }}
+                  />
+                );
+              })}
+            </Pressable>
+            <View className="mt-2 flex-row justify-between">
+              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                {formatTime(position)}
+              </Text>
+              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                {formatTime(duration)}
+              </Text>
+            </View>
+
+            <View className="mt-8 flex-row items-center justify-center gap-10">
+              <Pressable onPress={prev} disabled={!canPrev} hitSlop={8} className={!canPrev ? "opacity-30" : ""}>
+                <Ionicons name="play-skip-back" size={34} color={theme.primary} />
+              </Pressable>
+              <Pressable onPress={toggle} hitSlop={8} className="bg-primary h-16 w-16 items-center justify-center rounded-full">
+                <Ionicons name={isPlaying ? "pause" : "play"} size={30} color="#fff" style={{ marginLeft: isPlaying ? 0 : 3 }} />
+              </Pressable>
+              <Pressable onPress={next} disabled={!canNext} hitSlop={8} className={!canNext ? "opacity-30" : ""}>
+                <Ionicons name="play-skip-forward" size={34} color={theme.primary} />
+              </Pressable>
+            </View>
+
+            <View className="mt-10 flex-row items-center justify-center gap-6">
+              <Pressable onPress={toggleShuffle} hitSlop={8} className="h-10 w-10 items-center justify-center">
+                <Ionicons name="shuffle" size={20} color={shuffle ? theme.primary : theme.textMuted} />
+              </Pressable>
+              <Pressable onPress={cycleSpeed} hitSlop={8} className="h-10 min-w-10 items-center justify-center px-1">
+                <Text className="font-semibold" style={{ fontSize: captionSmall, color: speed === 1 ? theme.textMuted : theme.primary }}>
+                  {speed}x
+                </Text>
+              </Pressable>
+              <Pressable onPress={cycleSleepTimer} hitSlop={8} className="h-10 flex-row items-center justify-center gap-1 px-1">
+                <Ionicons name={sleepMinutes ? "moon" : "moon-outline"} size={18} color={sleepMinutes ? theme.primary : theme.textMuted} />
+                {sleepMinutes && (
+                  <Text className="font-semibold" style={{ fontSize: captionSmall, color: theme.primary }}>
+                    {sleepMinutes}m
+                  </Text>
+                )}
+              </Pressable>
+              <Pressable onPress={cycleLoop} hitSlop={8} className="relative h-10 w-10 items-center justify-center">
+                <Ionicons
+                  name={loopMode === "off" ? "repeat-outline" : "repeat"}
+                  size={20}
+                  color={loopMode === "off" ? theme.textMuted : theme.primary}
+                />
+                {loopMode === "one" && (
+                  <Text className="absolute top-1 right-0 text-[9px] leading-none font-bold" style={{ color: theme.primary }}>
+                    1
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={{ paddingBottom: insets.bottom + 16 }} />
+        </View>
+      </Modal>
+
+      <Modal visible={queueVisible} animationType="slide" transparent onRequestClose={() => setQueueVisible(false)}>
+        <View className="flex-1 justify-end">
+          <Pressable className="absolute inset-0 bg-black/40" onPress={() => setQueueVisible(false)} />
+          <View className="max-h-[70%] rounded-t-3xl bg-white dark:bg-slate-900" style={{ paddingBottom: insets.bottom + 12 }}>
+            <View className="flex-row items-center justify-between px-5 pt-4 pb-2">
+              <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: heading }}>
+                Up Next
+              </Text>
+              <Pressable onPress={() => setQueueVisible(false)} hitSlop={8}>
+                <Ionicons name="close" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
+              </Pressable>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {queue.map((item, i) => {
+                const active = i === index;
+                return (
+                  <Pressable key={`${item.hymnId}-${i}`} onPress={() => jumpTo(i)} className="flex-row items-center gap-3 px-5 py-3">
+                    <Ionicons
+                      name={active ? "musical-notes" : "musical-note-outline"}
+                      size={18}
+                      color={active ? theme.primary : theme.textMuted}
+                    />
+                    <View className="flex-1">
+                      <Text
+                        className="font-semibold dark:text-gray-100"
+                        numberOfLines={1}
+                        style={{ fontSize: body, color: active ? theme.primary : undefined }}
+                      >
+                        {item.title ?? item.hymnId}
+                      </Text>
+                      {item.bookName && (
+                        <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                          {item.bookName}
+                        </Text>
+                      )}
+                    </View>
+                    <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                      {formatTime(item.duration)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
