@@ -5,6 +5,7 @@ import { SectionList, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useRecordingsStore } from "@/state/recordingsStore";
+import { useDayPlaylist } from "@/hooks/useDayPlaylist";
 import { useFontScale } from "@/hooks/useFontScale";
 import { useIsDark } from "@/hooks/useIsDark";
 import { theme } from "@/theme/colors";
@@ -32,6 +33,7 @@ export default function RecordingsListScreen() {
   const isDark = useIsDark();
   const { fontSize, body, captionSmall } = useFontScale();
   const recordings = useRecordingsStore((s) => s.recordings);
+  const { activeDayKey, isPlaying, toggleDay } = useDayPlaylist();
 
   const recordedHymns = Object.entries(recordings)
     .filter(([, rec]) => rec != null)
@@ -82,11 +84,21 @@ export default function RecordingsListScreen() {
             </Text>
           </View>
         }
-        renderSectionHeader={({ section }) => (
-          <View className="pt-5 pb-2">
-            <Text className="text-text-muted text-[11px] font-semibold tracking-[1.5px] dark:text-gray-500">{section.title}</Text>
-          </View>
-        )}
+        renderSectionHeader={({ section }) => {
+          const active = activeDayKey === section.title;
+          return (
+            <View className="flex-row items-center justify-between pt-5 pb-2">
+              <Text className="text-text-muted text-[11px] font-semibold tracking-[1.5px] dark:text-gray-500">{section.title}</Text>
+              <Pressable
+                onPress={() => toggleDay(section.title ?? "", section.data)}
+                hitSlop={8}
+                className="h-8 w-8 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20"
+              >
+                <Ionicons name={active && isPlaying ? "pause" : "play"} size={14} color={theme.primary} />
+              </Pressable>
+            </View>
+          );
+        }}
         renderItem={({ item }) => {
           const [bookId, numStr] = item.hymnId.split(":");
           return (

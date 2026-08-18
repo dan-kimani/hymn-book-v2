@@ -13,6 +13,12 @@ import { VarelaRound_400Regular } from "@expo-google-fonts/varela-round";
 import { useBibleStore } from "@/state/bibleStore";
 import { useSettingsStore } from "@/state/settingsStore";
 import { useAutoBackup } from "@/hooks/useAutoBackup";
+import TrackPlayer from "react-native-track-player";
+import { PlaybackService } from "@/player/playbackService";
+
+// Register at module scope so background playback works even when the app is closed
+// (Android headless service / iOS audio session).
+TrackPlayer.registerPlaybackService(() => PlaybackService);
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
