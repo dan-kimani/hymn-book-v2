@@ -29,32 +29,15 @@ function formatTime(ts: number | null): string {
 
 export function BackupSection() {
   const { body, captionSmall } = useFontScale();
-  const {
-    frequency,
-    setFrequency,
-    lastBackupAt,
-    lastBackupSize,
-    status,
-    error,
-    signedIn,
-    email,
-    signIn,
-    signOut,
-    backUpNow,
-    restore,
-  } = useBackup();
+  const { frequency, setFrequency, lastBackupAt, lastBackupSize, status, error, signedIn, email, signIn, signOut, backUpNow, restore } = useBackup();
 
   const busy = status === "signingIn" || status === "backingUp" || status === "restoring";
 
   const confirmRestore = () => {
-    Alert.alert(
-      "Restore backup?",
-      "This replaces your current data with the backup from Google Drive. Anything not yet backed up will be lost.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Restore", style: "destructive", onPress: restore },
-      ],
-    );
+    Alert.alert("Restore backup?", "This replaces your current data with the backup from Google Drive. Anything not yet backed up will be lost.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Restore", style: "destructive", onPress: restore },
+    ]);
   };
 
   return (
@@ -71,11 +54,7 @@ export function BackupSection() {
               {signedIn ? (email ?? "Signed in") : "Sign in to back up to Google Drive"}
             </Text>
           </View>
-          <Pressable
-            onPress={signedIn ? signOut : signIn}
-            disabled={busy}
-            className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700"
-          >
+          <Pressable onPress={signedIn ? signOut : signIn} disabled={busy} className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700">
             <Text className="font-semibold text-primary" style={{ fontSize: captionSmall }}>
               {signedIn ? "Sign out" : "Sign in"}
             </Text>
@@ -94,19 +73,8 @@ export function BackupSection() {
             {FREQUENCIES.map((f) => {
               const active = frequency === f.value;
               return (
-                <Pressable
-                  key={f.value}
-                  onPress={() => setFrequency(f.value)}
-                  className={`flex-1 py-2 rounded-lg border items-center ${
-                    active
-                      ? "border-primary/40 bg-primary/5 dark:bg-primary/10"
-                      : "border-gray-200 dark:border-slate-700"
-                  }`}
-                >
-                  <Text
-                    className={`font-semibold ${active ? "text-primary" : "text-text-secondary dark:text-gray-400"}`}
-                    style={{ fontSize: captionSmall }}
-                  >
+                <Pressable key={f.value} onPress={() => setFrequency(f.value)} className={`flex-1 py-2 rounded-lg border items-center ${active ? "border-primary/40 bg-primary/5 dark:bg-primary/10" : "border-gray-200 dark:border-slate-700"}`}>
+                  <Text className={`font-semibold ${active ? "text-primary" : "text-text-secondary dark:text-gray-400"}`} style={{ fontSize: captionSmall }}>
                     {f.label}
                   </Text>
                 </Pressable>
@@ -128,30 +96,14 @@ export function BackupSection() {
 
         {/* Actions */}
         <View className="flex-row gap-2 py-2.5">
-          <Pressable
-            onPress={backUpNow}
-            disabled={busy}
-            className="flex-1 py-2.5 rounded-xl bg-primary flex-row items-center justify-center gap-2"
-          >
-            {status === "backingUp" ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Ionicons name="cloud-upload-outline" size={16} color="#FFFFFF" />
-            )}
+          <Pressable onPress={backUpNow} disabled={busy} className="flex-1 py-2.5 rounded-xl bg-primary flex-row items-center justify-center gap-2">
+            {status === "backingUp" ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Ionicons name="cloud-upload-outline" size={16} color="#FFFFFF" />}
             <Text className="font-semibold text-white" style={{ fontSize: body }}>
               {status === "backingUp" ? "Backing up…" : "Back up now"}
             </Text>
           </Pressable>
-          <Pressable
-            onPress={confirmRestore}
-            disabled={busy}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 flex-row items-center justify-center gap-2"
-          >
-            {status === "restoring" ? (
-              <ActivityIndicator size="small" color={theme.primary} />
-            ) : (
-              <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
-            )}
+          <Pressable onPress={confirmRestore} disabled={busy} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 flex-row items-center justify-center gap-2">
+            {status === "restoring" ? <ActivityIndicator size="small" color={theme.primary} /> : <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />}
             <Text className="font-semibold text-primary" style={{ fontSize: body }}>
               {status === "restoring" ? "Restoring…" : "Restore"}
             </Text>

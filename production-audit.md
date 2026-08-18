@@ -73,9 +73,9 @@ The code is generally clean — `tsc --noEmit` passes, FTS5 works, event listene
 - **Impact:** iOS unreleasable; Play upload blocked (unless sideloading APKs is intentional); nothing verifies a build before release.
 - **Fix:** Add an `ios` section to the production profile; use `buildType: "aab"` (default) for Play (keep a separate `apk` profile for sideloading); add `typecheck`/`lint` scripts and a CI workflow.
 
-### 9. Backup/restore compress synchronously on the JS thread — ✅ Resolved
+### 9. Backup/restore compress synchronously on the JS thread — ⚠️ Reverted (still open)
 
-**Status:** ✅ Resolved (2026-08-15). Replaced `zipSync`/`unzipSync` with fflate's async `zip`/`unzip` (promisified), which yield between chunks so compression no longer blocks the JS thread. Verified `tsc --noEmit` (exit 0). Note: audio is still held in memory during zip (fflate has no per-entry streaming); fully streaming/memory-bounded compression would need a native module or worker — left as a future optimization.
+**Status:** ⚠️ Not resolved. An attempt to use fflate's async `zip`/`unzip` was **reverted** (2026-08-18): fflate's async API runs in a Web Worker (`new Worker(URL.createObjectURL(new Blob(...)))`), which React Native/Hermes does not support — it throws `Property 'Worker' doesn't exist` at runtime. The code is back to `zipSync`/`unzipSync` (working, but synchronous on the JS thread). True off-thread + memory-bounded compression requires a native module (OS zlib/zip) — still open.
 
 - **Where:** `src/services/backup/createBackup.ts:49-70`, `restoreBackup.ts:49`
 - **What:** All recordings loaded into memory via `file.bytes()` then `zipSync` (level 6) on the JS thread; `unzipSync` mirrors it on restore.

@@ -1,9 +1,4 @@
-import {
-  getAccessToken,
-  signIn as driveSignIn,
-  signInSilently,
-  signOut as driveSignOut,
-} from "@/services/drive/googleSignIn";
+import { getAccessToken, signIn as driveSignIn, signInSilently, signOut as driveSignOut } from "@/services/drive/googleSignIn";
 import { listBackup, uploadBackup } from "@/services/drive/driveApi";
 import { useBackupStore } from "@/state/backupStore";
 import { createBackupArchive } from "./createBackup";
