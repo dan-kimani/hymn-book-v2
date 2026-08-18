@@ -2,7 +2,7 @@
   "expo": {
     "name": "Nyĩmbo na Kĩrĩkanĩro",
     "slug": "nyimbonakirikaniro",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "nyimbonakirikaniro",
@@ -32,7 +32,7 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
-      "versionCode": 10202,
+      "versionCode": 10203,
       "allowBackup": true
     },
     "plugins": [
