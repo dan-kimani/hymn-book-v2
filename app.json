@@ -61,7 +61,8 @@
         }
       ],
       "@react-native-google-signin/google-signin",
-      "expo-sharing"
+      "expo-sharing",
+      "react-native-audio-api"
     ],
     "extra": {
       "webClientId": "",

@@ -13,12 +13,7 @@ import { VarelaRound_400Regular } from "@expo-google-fonts/varela-round";
 import { useBibleStore } from "@/state/bibleStore";
 import { useSettingsStore } from "@/state/settingsStore";
 import { useAutoBackup } from "@/hooks/useAutoBackup";
-import TrackPlayer from "react-native-track-player";
-import { PlaybackService } from "@/player/playbackService";
-
-// Register at module scope so background playback works even when the app is closed
-// (Android headless service / iOS audio session).
-TrackPlayer.registerPlaybackService(() => PlaybackService);
+import { PlaybackProvider } from "@/player/PlaybackProvider";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -57,14 +52,16 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: "fade_from_bottom",
-          contentStyle: { backgroundColor: bg },
-        }}
-      />
+      <PlaybackProvider>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: "fade_from_bottom",
+            contentStyle: { backgroundColor: bg },
+          }}
+        />
+      </PlaybackProvider>
     </GestureHandlerRootView>
   );
 }

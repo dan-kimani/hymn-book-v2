@@ -3900,6 +3900,13 @@ react-is@^19.1.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.2.8.tgz#09826f9fbc187bc668e3e5c62edc001f804d5018"
   integrity sha512-s5un28nYxKJw5gvUHyW5PCC28CvBqLu9r3cWgzHT4Vo/5fqqkFcdRYsGcKf50WMPpjjFZS5d76fn3YCo2njKwQ==
 
+react-native-audio-api@^0.13.3:
+  version "0.13.3"
+  resolved "https://registry.yarnpkg.com/react-native-audio-api/-/react-native-audio-api-0.13.3.tgz#87b17cc1e76d3a07a189a3dda767b1584d484ad8"
+  integrity sha512-U2+vMo7N7CtwHTNNEWnnIckw1EhwhUEmXhQFCL4boo3Q4UfeI1mu2z3DR6BMRL5wWrGYVLNZXQyt5U85nAXntg==
+  dependencies:
+    semver "^7.7.3"
+
 react-native-drawer-layout@^4.2.2:
   version "4.2.10"
   resolved "https://registry.yarnpkg.com/react-native-drawer-layout/-/react-native-drawer-layout-4.2.10.tgz#80eb37b6cce4bca95a2b58ca7efc7003ea2a3cdb"
@@ -3943,11 +3950,6 @@ react-native-screens@^4.26.0, react-native-screens@^4.26.2:
   dependencies:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
-
-react-native-track-player@^4.1.2:
-  version "4.1.2"
-  resolved "https://registry.yarnpkg.com/react-native-track-player/-/react-native-track-player-4.1.2.tgz#f855e79ea947f7fed707dbd4b5e9a8bc02e0454d"
-  integrity sha512-cIgMlqVJx/95hirUWPRW8CHxiBFj9Rjl/voKHh2jF/2URYMTQyt76t/m2FKvjeYUW2doKv4QSCBIOUmtyDLtJw==
 
 react-native-webview@13.16.1:
   version "13.16.1"
