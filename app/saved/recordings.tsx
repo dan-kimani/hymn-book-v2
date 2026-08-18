@@ -72,6 +72,7 @@ export default function RecordingsListScreen() {
     queue,
     index,
     jumpTo,
+    stop,
   } = useDayPlaylist();
   const barWidthRef = useRef(0);
   const modalBarWidthRef = useRef(0);
@@ -118,7 +119,7 @@ export default function RecordingsListScreen() {
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.hymnId}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 220 }}
         showsVerticalScrollIndicator={false}
         stickySectionHeadersEnabled={false}
         ListEmptyComponent={
@@ -127,7 +128,7 @@ export default function RecordingsListScreen() {
             <Text className="text-text-secondary mt-3 font-medium dark:text-gray-400" style={{ fontSize: body }}>
               No recordings yet
             </Text>
-            <Text className="text-text-muted mt-1 text-center dark:text-gray-500" style={{ fontSize: captionSmall }}>
+            <Text className="text-text-muted mt-1 text-center dark:text-gray-400" style={{ fontSize: captionSmall }}>
               Record a hymn tune from the reader
             </Text>
           </View>
@@ -136,7 +137,7 @@ export default function RecordingsListScreen() {
           const active = activeDayKey === section.title;
           return (
             <View className="flex-row items-center justify-between pt-5 pb-2">
-              <Text className="text-text-muted text-[11px] font-semibold tracking-[1.5px] dark:text-gray-500">{section.title}</Text>
+              <Text className="text-text-muted text-[11px] font-semibold tracking-[1.5px] dark:text-gray-400">{section.title}</Text>
               <View className="flex-row items-center gap-1.5">
                 <Pressable
                   onPress={prev}
@@ -208,12 +209,12 @@ export default function RecordingsListScreen() {
                     <View className="mt-1 h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700">
                       <View className="bg-primary h-1 rounded-full" style={{ width: `${progress * 100}%` }} />
                     </View>
-                    <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                    <Text className="text-text-muted mt-0.5 dark:text-gray-400" style={{ fontSize: captionSmall }}>
                       {formatTime(position)} / {formatTime(duration)}
                     </Text>
                   </>
                 )}
-                <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                <Text className="text-text-muted mt-0.5 dark:text-gray-400" style={{ fontSize: captionSmall }}>
                   {item.bookName || bookId} · #{numStr}
                 </Text>
               </View>
@@ -233,15 +234,16 @@ export default function RecordingsListScreen() {
       {currentTitle && (
         <View className="absolute right-0 bottom-0 left-0 px-4" style={{ paddingBottom: insets.bottom + 10 }}>
           <View className="rounded-2xl border border-gray-100 bg-white p-3 shadow-lg dark:border-slate-800 dark:bg-slate-900">
-            <Pressable onPress={() => setPlayerVisible(true)} hitSlop={8}>
-              <Text
-                className="text-text-primary mb-1 font-semibold dark:text-gray-100"
-                numberOfLines={1}
-                style={{ fontSize: captionSmall }}
-              >
-                {currentTitle}
-              </Text>
-            </Pressable>
+            <View className="mb-1 flex-row items-center justify-between">
+              <Pressable onPress={() => setPlayerVisible(true)} hitSlop={8} className="flex-1">
+                <Text className="text-text-primary font-semibold dark:text-gray-100" numberOfLines={1} style={{ fontSize: captionSmall }}>
+                  {currentTitle}
+                </Text>
+              </Pressable>
+              <Pressable onPress={stop} hitSlop={8} className="ml-2 items-center justify-center">
+                <Ionicons name="close" size={18} color={isDark ? "#94A3B8" : theme.textSecondary} />
+              </Pressable>
+            </View>
             <Pressable
               onLayout={(e) => {
                 barWidthRef.current = e.nativeEvent.layout.width;
@@ -266,10 +268,10 @@ export default function RecordingsListScreen() {
               })}
             </Pressable>
             <View className="mt-1 flex-row justify-between">
-              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+              <Text className="text-text-muted dark:text-gray-400" style={{ fontSize: captionSmall }}>
                 {formatTime(position)}
               </Text>
-              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+              <Text className="text-text-muted dark:text-gray-400" style={{ fontSize: captionSmall }}>
                 {formatTime(duration)}
               </Text>
             </View>
@@ -337,7 +339,7 @@ export default function RecordingsListScreen() {
           </View>
 
           <View className="flex-1 justify-center px-8">
-            <Text className="text-text-muted mb-2 font-medium dark:text-gray-500" style={{ fontSize: captionSmall }}>
+            <Text className="text-text-muted mb-2 font-medium dark:text-gray-400" style={{ fontSize: captionSmall }}>
               {currentHymnId}
             </Text>
             <Pressable
@@ -364,10 +366,10 @@ export default function RecordingsListScreen() {
               })}
             </Pressable>
             <View className="mt-2 flex-row justify-between">
-              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+              <Text className="text-text-muted dark:text-gray-400" style={{ fontSize: captionSmall }}>
                 {formatTime(position)}
               </Text>
-              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+              <Text className="text-text-muted dark:text-gray-400" style={{ fontSize: captionSmall }}>
                 {formatTime(duration)}
               </Text>
             </View>
@@ -451,12 +453,12 @@ export default function RecordingsListScreen() {
                         {item.title ?? item.hymnId}
                       </Text>
                       {item.bookName && (
-                        <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                        <Text className="text-text-muted dark:text-gray-400" style={{ fontSize: captionSmall }}>
                           {item.bookName}
                         </Text>
                       )}
                     </View>
-                    <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                    <Text className="text-text-muted dark:text-gray-400" style={{ fontSize: captionSmall }}>
                       {formatTime(item.duration)}
                     </Text>
                   </Pressable>

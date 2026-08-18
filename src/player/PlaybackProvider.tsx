@@ -16,6 +16,7 @@ interface PlaybackContextValue {
   prev: () => void;
   seekTo: (seconds: number) => void;
   toggle: () => void;
+  stop: () => void;
   canNext: boolean;
   canPrev: boolean;
   loopMode: LoopMode;
@@ -292,6 +293,7 @@ export function PlaybackProvider({ children }: { children: ReactNode }) {
     prev,
     seekTo,
     toggle,
+    stop,
     canNext,
     canPrev,
     loopMode,
