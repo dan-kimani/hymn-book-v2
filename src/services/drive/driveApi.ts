@@ -57,12 +57,16 @@ async function initiateResumableUpload(token: string, fileId: string | null, siz
 }
 
 /** Uploads the archive file to Drive, creating or updating the single backup file. */
-export async function uploadBackup(token: string, params: { fileId: string | null; fileUri: string; size: number }): Promise<void> {
+export async function uploadBackup(
+  token: string,
+  params: { fileId: string | null; fileUri: string; size: number; onProgress?: (progress: number) => void },
+): Promise<void> {
   const sessionUri = await initiateResumableUpload(token, params.fileId, params.size);
 
   const file = new File(params.fileUri);
   const result = await file.upload(sessionUri, {
     httpMethod: "PUT",
+    onProgress: params.onProgress ? (data) => params.onProgress!(data.totalBytes > 0 ? data.bytesSent / data.totalBytes : 0) : undefined,
   });
 
   if (result.status !== 200 && result.status !== 201) {

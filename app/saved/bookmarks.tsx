@@ -45,7 +45,7 @@ export default function BookmarksListScreen() {
             if (!groups[key]) groups[key] = [];
             groups[key].push(bm);
           }
-          return Object.entries(groups).toSorted(([a], [b]) => b.localeCompare(a));
+          return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
         })()
       : null;
 

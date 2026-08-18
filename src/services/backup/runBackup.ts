@@ -37,6 +37,7 @@ export async function runBackup(opts: { interactive?: boolean } = {}): Promise<v
       fileId: existing?.id ?? null,
       fileUri: archive.uri,
       size: archive.size,
+      onProgress: (progress) => useBackupStore.getState().setProgress(progress),
     });
     useBackupStore.getState().markBackedUp(archive.size);
   } catch (e: any) {

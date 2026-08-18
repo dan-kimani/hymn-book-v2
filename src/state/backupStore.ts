@@ -12,10 +12,12 @@ interface BackupState {
   lastBackupSize: number | null;
   status: BackupStatus;
   error: string | null;
+  progress: number | null;
 
   setFrequency: (frequency: BackupFrequency) => void;
   setStatus: (status: BackupStatus) => void;
   setError: (error: string | null) => void;
+  setProgress: (progress: number | null) => void;
   markBackedUp: (size: number) => void;
 }
 
@@ -27,16 +29,19 @@ export const useBackupStore = create<BackupState>()(
       lastBackupSize: null,
       status: "idle",
       error: null,
+      progress: null,
 
       setFrequency: (frequency) => set({ frequency }),
-      setStatus: (status) => set({ status, error: null }),
-      setError: (error) => set({ error, status: "idle" }),
+      setStatus: (status) => set({ status, error: null, progress: status === "backingUp" ? 0 : null }),
+      setError: (error) => set({ error, status: "idle", progress: null }),
+      setProgress: (progress) => set({ progress }),
       markBackedUp: (size) =>
         set({
           lastBackupAt: Date.now(),
           lastBackupSize: size,
           status: "idle",
           error: null,
+          progress: null,
         }),
     }),
     {

@@ -8,7 +8,8 @@
   "rules": {
     "no-underscore-dangle": ["warn", { "allow": ["_booksCache", "_touchedDefaultIds", "_seedVersion"] }],
     "no-await-in-loop": "off",
-    "no-map-spread": "off"
+    "no-map-spread": "off",
+    "no-array-sort": "off"
   },
   "ignorePatterns": ["dist/**", ".expo/**", "android/**", "ios/**", "extracted/**", "node_modules/**", "src/uniwind-types.d.ts"]
 }

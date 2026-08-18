@@ -131,7 +131,7 @@ export default function BibleChapterScreen() {
   const isBookmarked = useBibleBookmarksStore((s) => s.isBookmarked);
 
   const { selectionRef, englishSelectionRef, selectionText, headerVerses } = useMemo(() => {
-    const sorted = verses.filter((v) => selectedVerses.has(v.verse)).toSorted((a, b) => a.verse - b.verse);
+    const sorted = verses.filter((v) => selectedVerses.has(v.verse)).sort((a, b) => a.verse - b.verse);
     const verseRange = sorted.length > 0 ? `${ch}:${sorted[0].verse}${sorted.length > 1 ? `-${sorted[sorted.length - 1].verse}` : ""}` : "";
     return {
       headerVerses: sorted,

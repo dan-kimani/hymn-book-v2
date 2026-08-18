@@ -12,6 +12,7 @@ export function useBackup() {
   const lastBackupSize = useBackupStore((s) => s.lastBackupSize);
   const status = useBackupStore((s) => s.status);
   const error = useBackupStore((s) => s.error);
+  const progress = useBackupStore((s) => s.progress);
 
   const [signedIn, setSignedIn] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export function useBackup() {
     lastBackupSize,
     status,
     error,
+    progress,
     signedIn,
     email,
     signIn,

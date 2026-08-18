@@ -116,7 +116,7 @@ export function CrossRefExplorer({ visible, bookId, bookName, chapter, crossRefs
   const sourceGroups = useMemo(() => {
     const verseNums = Object.keys(crossRefsMap)
       .map(Number)
-      .toSorted((a, b) => a - b);
+      .sort((a, b) => a - b);
     return verseNums.map((vn) => ({
       verse: vn,
       text: verses.find((v) => v.verse === vn)?.text ?? "",

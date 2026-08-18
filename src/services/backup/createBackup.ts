@@ -37,7 +37,9 @@ export async function createBackupArchive(): Promise<BackupArchive> {
   const recState = recPayload?.state as { recordings?: Record<string, RecordingMeta | null> } | undefined;
   const recordings = recState?.recordings ?? {};
   const entries: BackupRecordingEntry[] = [];
-  const files: Record<string, Uint8Array> = {};
+  // Recordings are already AAC-compressed (.m4a) — store them (level 0) instead of
+  // deflating again, which wastes CPU for zero size gain and blocks the JS thread.
+  const files: Record<string, [Uint8Array, { level: 0 }]> = {};
 
   for (const [hymnId, rec] of Object.entries(recordings)) {
     if (!rec) continue;
@@ -47,7 +49,7 @@ export async function createBackupArchive(): Promise<BackupArchive> {
     const logicalPath = `recordings/${hymnId}/${basename}`;
     const bytes = await file.bytes();
     entries.push({ hymnId, logicalPath, size: bytes.byteLength });
-    files[logicalPath] = bytes;
+    files[logicalPath] = [bytes, { level: 0 }];
   }
 
   // 3. Build the manifest and zip everything into one archive.

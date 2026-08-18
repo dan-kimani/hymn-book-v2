@@ -29,7 +29,7 @@ function formatTime(ts: number | null): string {
 
 export function BackupSection() {
   const { body, captionSmall } = useFontScale();
-  const { frequency, setFrequency, lastBackupAt, lastBackupSize, status, error, signedIn, email, signIn, signOut, backUpNow, restore } =
+  const { frequency, setFrequency, lastBackupAt, lastBackupSize, status, error, progress, signedIn, email, signIn, signOut, backUpNow, restore } =
     useBackup();
 
   const busy = status === "signingIn" || status === "backingUp" || status === "restoring";
@@ -141,6 +141,17 @@ export function BackupSection() {
             </Text>
           </Pressable>
         </View>
+
+        {status === "backingUp" && progress != null && (
+          <View className="mb-2">
+            <View className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700">
+              <View className="h-full rounded-full bg-primary" style={{ width: `${Math.round(progress * 100)}%` }} />
+            </View>
+            <Text className="text-text-muted mt-1 text-right dark:text-gray-500" style={{ fontSize: captionSmall }}>
+              {Math.round(progress * 100)}%
+            </Text>
+          </View>
+        )}
 
         {error ? (
           <Text className="pb-2.5 text-red-500 dark:text-red-400" style={{ fontSize: captionSmall }}>

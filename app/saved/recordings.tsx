@@ -36,7 +36,7 @@ export default function RecordingsListScreen() {
   const recordedHymns = Object.entries(recordings)
     .filter(([, rec]) => rec != null)
     .map(([hymnId, rec]) => ({ hymnId, ...rec! }))
-    .toSorted((a, b) => b.createdAt - a.createdAt);
+    .sort((a, b) => b.createdAt - a.createdAt);
 
   // Group by recording date, preserving most-recent-first order.
   const sections = (() => {
