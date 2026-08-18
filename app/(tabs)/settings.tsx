@@ -45,15 +45,19 @@ export default function SettingsScreen() {
   return (
     <View className="flex-1 bg-white dark:bg-slate-950">
       {/* Floating header — fades in on scroll */}
-      <Animated.View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top + 8 }}>
+      <Animated.View className="absolute top-0 right-0 left-0 z-10" style={{ paddingTop: insets.top + 8 }}>
         <TopGlow height={headerHeight + 90} opacity={headerOpacity} />
 
-        <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
+        <Animated.View
+          className="absolute top-0 right-0 left-0 overflow-hidden"
+          style={{ height: headerHeight, opacity: headerOpacity }}
+          pointerEvents="none"
+        >
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
 
         <View className="px-6 pb-4">
-          <Text className="font-extrabold tracking-tight text-text-primary dark:text-gray-100" style={{ fontSize: fontSize + 14 }}>
+          <Text className="text-text-primary font-extrabold tracking-tight dark:text-gray-100" style={{ fontSize: fontSize + 14 }}>
             Settings
           </Text>
         </View>
@@ -67,12 +71,19 @@ export default function SettingsScreen() {
       >
         {/* Appearance */}
         <SectionLabel className="mb-3 ml-1">Appearance</SectionLabel>
-        <View className="flex-row gap-2 mb-8">
+        <View className="mb-8 flex-row gap-2">
           {(["system", "light", "dark"] as const).map((mode) => {
             const active = themeMode === mode;
             return (
-              <Pressable key={mode} className={`flex-1 py-2.5 rounded-xl border items-center ${active ? "border-primary/40 bg-primary/5 dark:bg-primary/10" : "border-gray-200 dark:border-slate-700"}`} onPress={() => setThemeMode(mode)}>
-                <Text className={`font-semibold capitalize ${active ? "text-primary" : "text-text-secondary dark:text-gray-400"}`} style={{ fontSize: bodySmall }}>
+              <Pressable
+                key={mode}
+                className={`flex-1 items-center rounded-xl border py-2.5 ${active ? "border-primary/40 bg-primary/5 dark:bg-primary/10" : "border-gray-200 dark:border-slate-700"}`}
+                onPress={() => setThemeMode(mode)}
+              >
+                <Text
+                  className={`font-semibold capitalize ${active ? "text-primary" : "text-text-secondary dark:text-gray-400"}`}
+                  style={{ fontSize: bodySmall }}
+                >
                   {mode}
                 </Text>
               </Pressable>
@@ -82,26 +93,31 @@ export default function SettingsScreen() {
 
         {/* Reading */}
         <SectionLabel className="mb-3 ml-1">Reading</SectionLabel>
-        <View className="rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 px-4 py-1 mb-8">
+        <View className="mb-8 rounded-xl border border-gray-100 bg-gray-50 px-4 py-1 dark:border-slate-800 dark:bg-slate-900">
           {/* Font family */}
-          <View className="flex-row items-center justify-between py-2.5 border-b border-gray-100/60 dark:border-slate-800/60">
+          <View className="flex-row items-center justify-between border-b border-gray-100/60 py-2.5 dark:border-slate-800/60">
             <View className="flex-1">
-              <Text className="font-semibold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+              <Text className="text-text-primary font-semibold dark:text-gray-100" style={{ fontSize: body }}>
                 Serif font
               </Text>
-              <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+              <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
                 Literata typeface for reading
               </Text>
             </View>
-            <Switch value={readingFont === "serif"} onValueChange={(v) => setReadingFont(v ? "serif" : "sans")} trackColor={{ false: theme.border, true: theme.primaryLight }} thumbColor={readingFont === "serif" ? theme.primary : theme.textMuted} />
+            <Switch
+              value={readingFont === "serif"}
+              onValueChange={(v) => setReadingFont(v ? "serif" : "sans")}
+              trackColor={{ false: theme.border, true: theme.primaryLight }}
+              thumbColor={readingFont === "serif" ? theme.primary : theme.textMuted}
+            />
           </View>
           {/* Font size */}
           <View className="flex-row items-center justify-between py-2.5">
             <View className="flex-1">
-              <Text className="font-semibold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+              <Text className="text-text-primary font-semibold dark:text-gray-100" style={{ fontSize: body }}>
                 Font size
               </Text>
-              <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+              <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
                 Adjust reading text size
               </Text>
             </View>
@@ -111,14 +127,17 @@ export default function SettingsScreen() {
 
         {/* Search scope */}
         <SectionLabel className="mb-3 ml-1">Search scope</SectionLabel>
-        <View className="rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 px-4 py-1 mb-8">
+        <View className="mb-8 rounded-xl border border-gray-100 bg-gray-50 px-4 py-1 dark:border-slate-800 dark:bg-slate-900">
           {SEARCH_BOOKS.map((book) => (
-            <View key={book.id} className="flex-row items-center justify-between py-2.5 border-b border-gray-100/60 dark:border-slate-800/60 last:border-b-0">
+            <View
+              key={book.id}
+              className="flex-row items-center justify-between border-b border-gray-100/60 py-2.5 last:border-b-0 dark:border-slate-800/60"
+            >
               <View className="flex-1">
-                <Text className="font-semibold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+                <Text className="text-text-primary font-semibold dark:text-gray-100" style={{ fontSize: body }}>
                   {book.name}
                 </Text>
-                <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+                <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
                   {book.count} hymns
                 </Text>
               </View>
@@ -136,7 +155,7 @@ export default function SettingsScreen() {
         <BackupSection />
 
         {/* About */}
-        <Text className="text-text-muted dark:text-gray-500 text-center" style={{ fontSize: caption }}>
+        <Text className="text-text-muted text-center dark:text-gray-500" style={{ fontSize: caption }}>
           2,008 hymns across 4 books
         </Text>
       </Animated.ScrollView>

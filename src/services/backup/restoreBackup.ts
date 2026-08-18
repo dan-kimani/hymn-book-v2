@@ -78,14 +78,9 @@ function isSafeLogicalPath(p: string): boolean {
  * missing (or whose path is unsafe) are dropped from the metadata so no dangling
  * recording survives.
  */
-function writeRecordings(
-  manifest: BackupManifest,
-  unzipped: Record<string, Uint8Array>,
-): void {
+function writeRecordings(manifest: BackupManifest, unzipped: Record<string, Uint8Array>): void {
   const recPayload = manifest.stores[RECORDINGS_KEY];
-  const recState = recPayload?.state as
-    | { recordings?: Record<string, RecordingMeta | null> }
-    | undefined;
+  const recState = recPayload?.state as { recordings?: Record<string, RecordingMeta | null> } | undefined;
   const recs = recState?.recordings;
   const restored = new Set<string>();
 
@@ -123,10 +118,7 @@ async function writeStores(manifest: BackupManifest): Promise<void> {
       await AsyncStorage.setItem(key, JSON.stringify(payload));
     } else {
       const store = STORE_BY_KEY[key];
-      await AsyncStorage.setItem(
-        key,
-        JSON.stringify({ state: store.getInitialState(), version: 0 }),
-      );
+      await AsyncStorage.setItem(key, JSON.stringify({ state: store.getInitialState(), version: 0 }));
     }
   }
 }

@@ -1,14 +1,14 @@
 export type Testament = "OT" | "NT";
 
 export interface BibleBook {
-  id: number;          // canonical order 1-66
-  usfm: string;        // "GEN", "EXO", "1KI"
-  number: number;      // canonical order 1-66
-  name: string;        // Gikuyu: "Kĩambĩrĩria"
-  shortName: string;   // abbreviated
+  id: number; // canonical order 1-66
+  usfm: string; // "GEN", "EXO", "1KI"
+  number: number; // canonical order 1-66
+  name: string; // Gikuyu: "Kĩambĩrĩria"
+  shortName: string; // abbreviated
   englishName: string; // "Genesis", for search aliases
   testament: Testament;
-  chapters: number;    // total chapters in this book
+  chapters: number; // total chapters in this book
 }
 
 export interface BibleVerse {

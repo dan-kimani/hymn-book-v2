@@ -35,10 +35,7 @@ interface CollectionsState {
 
 const DEFAULT_IDS = new Set(DEFAULT_COLLECTIONS.map((d) => d.id));
 
-function touchIfDefault(
-  state: CollectionsState,
-  id: string,
-): Partial<CollectionsState> {
+function touchIfDefault(state: CollectionsState, id: string): Partial<CollectionsState> {
   if (DEFAULT_IDS.has(id) && !state._touchedDefaultIds.includes(id)) {
     return { _touchedDefaultIds: [...state._touchedDefaultIds, id] };
   }
@@ -73,9 +70,7 @@ export const useCollectionsStore = create<CollectionsState>()(
 
       renameCollection: (id, name) =>
         set((state) => ({
-          collections: state.collections.map((c) =>
-            c.id === id ? { ...c, name } : c,
-          ),
+          collections: state.collections.map((c) => (c.id === id ? { ...c, name } : c)),
           ...touchIfDefault(state, id),
         })),
 
@@ -92,9 +87,7 @@ export const useCollectionsStore = create<CollectionsState>()(
       removeFromCollection: (collectionId, hymnId) =>
         set((state) => ({
           collections: state.collections.map((c) =>
-            c.id === collectionId
-              ? { ...c, hymns: c.hymns.filter((h) => h.hymnId !== hymnId) }
-              : c,
+            c.id === collectionId ? { ...c, hymns: c.hymns.filter((h) => h.hymnId !== hymnId) } : c,
           ),
           ...touchIfDefault(state, collectionId),
         })),

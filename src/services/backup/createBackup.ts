@@ -5,12 +5,7 @@ import { strToU8, zipSync } from "fflate";
 
 import type { RecordingMeta } from "@/state/recordingsStore";
 import { BACKUP_CACHE_FILENAME, DATA_STORE_KEYS } from "./constants";
-import {
-  buildManifest,
-  type BackupManifest,
-  type BackupRecordingEntry,
-  type BackupStorePayload,
-} from "./backupManifest";
+import { buildManifest, type BackupManifest, type BackupRecordingEntry, type BackupStorePayload } from "./backupManifest";
 
 export interface BackupArchive {
   uri: string;
@@ -39,9 +34,7 @@ export async function createBackupArchive(): Promise<BackupArchive> {
   // (not the in-memory store), so a scheduled backup fired before the recordings store
   // hydrates can't archive metadata with no audio.
   const recPayload = stores["nyimbonakirikaniro-recordings"];
-  const recState = recPayload?.state as
-    | { recordings?: Record<string, RecordingMeta | null> }
-    | undefined;
+  const recState = recPayload?.state as { recordings?: Record<string, RecordingMeta | null> } | undefined;
   const recordings = recState?.recordings ?? {};
   const entries: BackupRecordingEntry[] = [];
   const files: Record<string, Uint8Array> = {};
@@ -64,10 +57,7 @@ export async function createBackupArchive(): Promise<BackupArchive> {
     recordings: entries,
   });
 
-  const zipBytes = zipSync(
-    { "backup.json": strToU8(JSON.stringify(manifest)), ...files },
-    { level: 6 },
-  );
+  const zipBytes = zipSync({ "backup.json": strToU8(JSON.stringify(manifest)), ...files }, { level: 6 });
 
   // 4. Write the archive to cache for upload.
   const out = new File(Paths.cache, BACKUP_CACHE_FILENAME);

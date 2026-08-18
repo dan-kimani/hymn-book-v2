@@ -6,7 +6,6 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFontScale } from "@/hooks/useFontScale";
 import { useIsDark } from "@/hooks/useIsDark";
-import { theme } from "@/theme/colors";
 
 interface SummarySheetProps {
   visible: boolean;
@@ -30,9 +29,12 @@ export function SummarySheet({ visible, bookName, isOT, context, summary, afterm
     { label: "What Followed", text: aftermath, icon: "compass-outline" as const },
   ];
 
-  const handleChange = useCallback((idx: number) => {
-    if (idx === -1) onClose();
-  }, [onClose]);
+  const handleChange = useCallback(
+    (idx: number) => {
+      if (idx === -1) onClose();
+    },
+    [onClose],
+  );
 
   return (
     <BottomSheet
@@ -55,11 +57,11 @@ export function SummarySheet({ visible, bookName, isOT, context, summary, afterm
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View className="mb-4">
-            <View className="flex-row items-center gap-2.5 mb-1">
-              <View className={`w-8 h-8 rounded-lg items-center justify-center ${isOT ? "bg-amber-500/15" : "bg-blue-500/15"}`}>
+            <View className="mb-1 flex-row items-center gap-2.5">
+              <View className={`h-8 w-8 items-center justify-center rounded-lg ${isOT ? "bg-amber-500/15" : "bg-blue-500/15"}`}>
                 <Ionicons name="sparkles" size={16} color={isOT ? "#B45309" : "#2563EB"} />
               </View>
-              <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+              <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: body }}>
                 About {bookName}
               </Text>
             </View>
@@ -70,13 +72,13 @@ export function SummarySheet({ visible, bookName, isOT, context, summary, afterm
         }
         renderItem={({ item }) => (
           <View className="mb-4">
-            <View className="flex-row items-center gap-2 mb-1.5">
+            <View className="mb-1.5 flex-row items-center gap-2">
               <Ionicons name={item.icon} size={14} color={isOT ? "#B45309" : "#2563EB"} />
-              <Text className="font-semibold text-text-secondary dark:text-gray-400" style={{ fontSize: caption }}>
+              <Text className="text-text-secondary font-semibold dark:text-gray-400" style={{ fontSize: caption }}>
                 {item.label}
               </Text>
             </View>
-            <Text className="text-text-primary dark:text-gray-100 leading-relaxed" style={{ fontSize: body }}>
+            <Text className="text-text-primary leading-relaxed dark:text-gray-100" style={{ fontSize: body }}>
               {item.text}
             </Text>
           </View>

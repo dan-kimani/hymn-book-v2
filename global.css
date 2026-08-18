@@ -2,27 +2,27 @@
 @import "uniwind";
 
 @theme {
-  --color-primary: #F97316;
-  --color-primary-deep: #EA580C;
-  --color-primary-light: #FB923C;
-  --color-primary-tint: #FFF7ED;
+  --color-primary: #f97316;
+  --color-primary-deep: #ea580c;
+  --color-primary-light: #fb923c;
+  --color-primary-tint: #fff7ed;
 
-  --color-surface: #F6F8FC;
-  --color-surface-alt: #EEF2F9;
+  --color-surface: #f6f8fc;
+  --color-surface-alt: #eef2f9;
 
-  --color-text-primary: #0B1220;
-  --color-text-secondary: #52607A;
-  --color-text-muted: #8A94A6;
+  --color-text-primary: #0b1220;
+  --color-text-secondary: #52607a;
+  --color-text-muted: #8a94a6;
 
-  --color-border: #E3E8F0;
-  --color-border-light: #EEF1F6;
+  --color-border: #e3e8f0;
+  --color-border-light: #eef1f6;
 
-  --color-favorite: #F43F5E;
-  --color-danger: #EF4444;
-  --color-success: #10B981;
+  --color-favorite: #f43f5e;
+  --color-danger: #ef4444;
+  --color-success: #10b981;
 
-  --color-book-roho-mutheru: #2A1E37;
-  --color-book-atumwo: #42613F;
-  --color-book-kiroho: #2C5D1A;
-  --color-book-golden-bells: #2F6BA9;
+  --color-book-roho-mutheru: #2a1e37;
+  --color-book-atumwo: #42613f;
+  --color-book-kiroho: #2c5d1a;
+  --color-book-golden-bells: #2f6ba9;
 }

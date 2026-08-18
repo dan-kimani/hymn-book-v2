@@ -24,8 +24,10 @@ export default function FavoritesListScreen() {
           <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
         </Pressable>
         <View className="flex-1">
-          <Text className="font-bold tracking-tight text-text-primary dark:text-gray-100" style={{ fontSize: fontSize + 10 }}>Favorites</Text>
-          <Text className="font-medium text-text-secondary dark:text-gray-400 mt-1" style={{ fontSize: body }}>
+          <Text className="text-text-primary font-bold tracking-tight dark:text-gray-100" style={{ fontSize: fontSize + 10 }}>
+            Favorites
+          </Text>
+          <Text className="text-text-secondary mt-1 font-medium dark:text-gray-400" style={{ fontSize: body }}>
             {favorites.length} hymn{favorites.length === 1 ? "" : "s"}
           </Text>
         </View>
@@ -39,8 +41,12 @@ export default function FavoritesListScreen() {
         ListEmptyComponent={
           <View className="items-center pt-16">
             <Ionicons name="heart-outline" size={36} color={theme.textMuted} />
-            <Text className="font-medium text-text-secondary dark:text-gray-400 mt-3" style={{ fontSize: body }}>No favorites yet</Text>
-            <Text className="text-text-muted dark:text-gray-500 text-center mt-1" style={{ fontSize: captionSmall }}>Tap the heart while reading a hymn</Text>
+            <Text className="text-text-secondary mt-3 font-medium dark:text-gray-400" style={{ fontSize: body }}>
+              No favorites yet
+            </Text>
+            <Text className="text-text-muted mt-1 text-center dark:text-gray-500" style={{ fontSize: captionSmall }}>
+              Tap the heart while reading a hymn
+            </Text>
           </View>
         }
         renderItem={({ item }) => {
@@ -48,7 +54,7 @@ export default function FavoritesListScreen() {
           const cover = book ? BOOK_COVERS[book.id] : null;
           return (
             <Pressable
-              className="flex-row items-center gap-3 mb-2"
+              className="mb-2 flex-row items-center gap-3"
               onPress={() =>
                 router.push({
                   pathname: "/hymn/[bookId]/[number]",
@@ -57,15 +63,15 @@ export default function FavoritesListScreen() {
               }
             >
               {cover ? (
-                <Image source={cover} className="w-9 h-12 rounded-sm" resizeMode="cover" />
+                <Image source={cover} className="h-12 w-9 rounded-sm" resizeMode="cover" />
               ) : (
-                <View className="w-9 h-12 rounded-sm bg-gray-100 dark:bg-slate-800" />
+                <View className="h-12 w-9 rounded-sm bg-gray-100 dark:bg-slate-800" />
               )}
               <View className="flex-1">
-                <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
+                <Text className="text-text-primary font-bold dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
                   {item.title}
                 </Text>
-                <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+                <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
                   {item.bookName} · #{item.number}
                 </Text>
               </View>

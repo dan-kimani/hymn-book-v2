@@ -39,7 +39,7 @@ export default function CollectionDetailScreen() {
 
   if (!col) {
     return (
-      <View className="flex-1 bg-white dark:bg-slate-950 items-center justify-center">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
         <Text className="text-text-muted dark:text-gray-500">Collection not found</Text>
       </View>
     );
@@ -62,29 +62,40 @@ export default function CollectionDetailScreen() {
   return (
     <View className="flex-1 bg-white dark:bg-slate-950">
       {/* Floating header — fades in on scroll */}
-      <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
+      <Animated.View className="absolute top-0 right-0 left-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
         <TopGlow height={headerHeight + 130} opacity={headerOpacity} />
 
-        <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
+        <Animated.View
+          className="absolute top-0 right-0 left-0 overflow-hidden"
+          style={{ height: headerHeight, opacity: headerOpacity }}
+          pointerEvents="none"
+        >
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
 
-        <View className="flex-row items-center px-4 pb-4 gap-3">
+        <View className="flex-row items-center gap-3 px-4 pb-4">
           <Pressable onPress={() => router.back()} hitSlop={8} className="pt-0.5">
             <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
           </Pressable>
           <View className="flex-1 flex-row items-center gap-2">
             {emoji ? <Text style={{ fontSize: 18 }}>{emoji}</Text> : null}
             {editing ? (
-              <View className="flex-row items-center gap-2 flex-1">
-                <TextInput className="flex-1 font-bold text-text-primary dark:text-gray-100" value={editName} onChangeText={setEditName} onSubmitEditing={handleRename} autoFocus style={{ fontSize: heading }} />
+              <View className="flex-1 flex-row items-center gap-2">
+                <TextInput
+                  className="text-text-primary flex-1 font-bold dark:text-gray-100"
+                  value={editName}
+                  onChangeText={setEditName}
+                  onSubmitEditing={handleRename}
+                  autoFocus
+                  style={{ fontSize: heading }}
+                />
                 <Pressable onPress={handleRename}>
                   <Ionicons name="checkmark" size={22} color={theme.primary} />
                 </Pressable>
               </View>
             ) : (
               <Pressable onPress={startEdit}>
-                <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: heading }}>
+                <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: heading }}>
                   {col.name}
                 </Text>
               </Pressable>
@@ -110,7 +121,7 @@ export default function CollectionDetailScreen() {
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
         ListHeaderComponent={
           <View className="pb-3">
-            <Text className="font-medium text-text-secondary dark:text-gray-400" style={{ fontSize: body }}>
+            <Text className="text-text-secondary font-medium dark:text-gray-400" style={{ fontSize: body }}>
               {col.hymns.length} hymn{col.hymns.length === 1 ? "" : "s"}
             </Text>
           </View>
@@ -118,8 +129,12 @@ export default function CollectionDetailScreen() {
         ListEmptyComponent={
           <View className="items-center pt-16">
             <Ionicons name="musical-notes-outline" size={36} color={theme.textMuted} />
-            <Text className="font-medium text-text-secondary dark:text-gray-400 mt-3" style={{ fontSize: body }}>Empty collection</Text>
-            <Text className="text-text-muted dark:text-gray-500 mt-1" style={{ fontSize: caption }}>Add hymns from the reader</Text>
+            <Text className="text-text-secondary mt-3 font-medium dark:text-gray-400" style={{ fontSize: body }}>
+              Empty collection
+            </Text>
+            <Text className="text-text-muted mt-1 dark:text-gray-500" style={{ fontSize: caption }}>
+              Add hymns from the reader
+            </Text>
           </View>
         }
         renderItem={({ item: hymn }) => {
@@ -135,12 +150,16 @@ export default function CollectionDetailScreen() {
                 })
               }
             >
-              {cover ? <Image source={cover} className="w-9 h-12 rounded-sm" resizeMode="cover" /> : <View className="w-9 h-12 rounded-sm bg-gray-100 dark:bg-slate-800" />}
+              {cover ? (
+                <Image source={cover} className="h-12 w-9 rounded-sm" resizeMode="cover" />
+              ) : (
+                <View className="h-12 w-9 rounded-sm bg-gray-100 dark:bg-slate-800" />
+              )}
               <View className="flex-1">
-                <Text className="font-semibold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
+                <Text className="text-text-primary font-semibold dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
                   {hymn.title}
                 </Text>
-                <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+                <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
                   {hymn.bookName} · #{hymn.number}
                 </Text>
               </View>

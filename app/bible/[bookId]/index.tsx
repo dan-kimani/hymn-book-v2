@@ -28,11 +28,17 @@ function ChapterCell({ ch, index, onPress }: { ch: number; index: number; onPres
 
   useEffect(() => {
     const delay = 40 + index * 40;
-    Animated.parallel([Animated.timing(fadeAnim, { toValue: 1, duration: 300, delay, useNativeDriver: true }), Animated.timing(slideAnim, { toValue: 0, duration: 350, delay, useNativeDriver: true })]).start();
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 300, delay, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 350, delay, useNativeDriver: true }),
+    ]).start();
   }, []);
 
   const handlePressIn = () => {
-    Animated.sequence([Animated.timing(flashAnim, { toValue: 1, duration: 80, useNativeDriver: false }), Animated.timing(flashAnim, { toValue: 0, duration: 400, useNativeDriver: false })]).start();
+    Animated.sequence([
+      Animated.timing(flashAnim, { toValue: 1, duration: 80, useNativeDriver: false }),
+      Animated.timing(flashAnim, { toValue: 0, duration: 400, useNativeDriver: false }),
+    ]).start();
     onPress();
   };
 
@@ -46,14 +52,17 @@ function ChapterCell({ ch, index, onPress }: { ch: number; index: number; onPres
   const altBg = rowIndex % 2 === 0 ? "bg-slate-50 dark:bg-slate-800/40" : "bg-slate-100/50 dark:bg-slate-800/60";
 
   return (
-    <Animated.View className="flex-1 aspect-square" style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-      <PressableScale className={`flex-1 aspect-square rounded-xl items-center justify-center border border-border dark:border-slate-800 ${altBg}`} onPress={handlePressIn}>
+    <Animated.View className="aspect-square flex-1" style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      <PressableScale
+        className={`border-border aspect-square flex-1 items-center justify-center rounded-xl border dark:border-slate-800 ${altBg}`}
+        onPress={handlePressIn}
+      >
         <Animated.View className="absolute inset-0 rounded-xl" style={{ backgroundColor: flashBg }} pointerEvents="none" />
         <View className="items-center gap-0.5">
-          <Text className="font-semibold text-text-muted dark:text-gray-500" style={{ fontSize: captionSize }}>
+          <Text className="text-text-muted font-semibold dark:text-gray-500" style={{ fontSize: captionSize }}>
             Chapter
           </Text>
-          <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: headingSize }}>
+          <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: headingSize }}>
             {ch}
           </Text>
         </View>
@@ -109,19 +118,23 @@ export default function BibleBookScreen() {
   return (
     <View className="flex-1 bg-white dark:bg-slate-950">
       {/* Header */}
-      <Animated.View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+      <Animated.View className="absolute top-0 right-0 left-0 z-10" style={{ paddingTop: insets.top }}>
         <TopGlow height={insets.top + 80} opacity={headerOpacity} />
 
-        <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: insets.top + 48, opacity: headerOpacity }} pointerEvents="none">
+        <Animated.View
+          className="absolute top-0 right-0 left-0 overflow-hidden"
+          style={{ height: insets.top + 48, opacity: headerOpacity }}
+          pointerEvents="none"
+        >
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
 
-        <View className="flex-row items-center px-4 h-12 gap-3">
+        <View className="h-12 flex-row items-center gap-3 px-4">
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
           </Pressable>
           <View className="flex-1">
-            <Text className="font-semibold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: headingSize }}>
+            <Text className="text-text-primary font-semibold dark:text-gray-100" numberOfLines={1} style={{ fontSize: headingSize }}>
               {book?.name ?? "Loading..."}
             </Text>
           </View>
@@ -166,24 +179,30 @@ export default function BibleBookScreen() {
             <View className="mb-6 px-1">
               <View className="flex-row items-start gap-2">
                 <View className="flex-1">
-                  <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: fontSize + 4 }}>
+                  <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: fontSize + 4 }}>
                     {book.name}
                   </Text>
-                  <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: headingSize }}>
+                  <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: headingSize }}>
                     {book.englishName}
                   </Text>
-                  <View className="flex-row items-center gap-2 mt-1.5 flex-wrap">
+                  <View className="mt-1.5 flex-row flex-wrap items-center gap-2">
                     <Text className="font-medium" style={{ fontSize: captionSize, color: isOT ? "#B45309" : "#2563EB" }}>
                       {isOT ? "Kĩrĩkanĩro Gĩa Tene" : "Kĩrĩkanĩro Kĩerũ"}
                     </Text>
-                    <Text className="text-text-muted/60 dark:text-gray-600" style={{ fontSize: captionSize }}>·</Text>
+                    <Text className="text-text-muted/60 dark:text-gray-600" style={{ fontSize: captionSize }}>
+                      ·
+                    </Text>
                     <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSize }}>
                       {chapterCount} chapter{chapterCount === 1 ? "" : "s"}
                     </Text>
                   </View>
                 </View>
                 {summary && (
-                  <Pressable onPress={() => setSummaryVisible(true)} hitSlop={8} className={`w-9 h-9 rounded-lg items-center justify-center mt-1 ${isOT ? "bg-amber-500/10 dark:bg-amber-500/15" : "bg-blue-500/10 dark:bg-blue-500/15"}`}>
+                  <Pressable
+                    onPress={() => setSummaryVisible(true)}
+                    hitSlop={8}
+                    className={`mt-1 h-9 w-9 items-center justify-center rounded-lg ${isOT ? "bg-amber-500/10 dark:bg-amber-500/15" : "bg-blue-500/10 dark:bg-blue-500/15"}`}
+                  >
                     <Ionicons name="sparkles" size={18} color={isOT ? "#B45309" : "#2563EB"} />
                   </Pressable>
                 )}
@@ -192,7 +211,7 @@ export default function BibleBookScreen() {
           )}
 
           {rows.map((row, ri) => (
-            <View key={ri} className="flex-row gap-2 mb-2">
+            <View key={ri} className="mb-2 flex-row gap-2">
               {row.map((ch, ci) => (
                 <ChapterCell
                   key={ch}
@@ -207,7 +226,10 @@ export default function BibleBookScreen() {
                 />
               ))}
               {/* Fill remaining slots with invisible placeholders */}
-              {row.length < CHAPTERS_PER_ROW && Array.from({ length: CHAPTERS_PER_ROW - row.length }).map((_, i) => <View key={`pad-${i}`} className="flex-1 aspect-square" />)}
+              {row.length < CHAPTERS_PER_ROW &&
+                Array.from({ length: CHAPTERS_PER_ROW - row.length }).map((_, i) => (
+                  <View key={`pad-${i}`} className="aspect-square flex-1" />
+                ))}
             </View>
           ))}
         </Animated.ScrollView>

@@ -29,52 +29,68 @@ function formatTime(ts: number | null): string {
 
 export function BackupSection() {
   const { body, captionSmall } = useFontScale();
-  const { frequency, setFrequency, lastBackupAt, lastBackupSize, status, error, signedIn, email, signIn, signOut, backUpNow, restore } = useBackup();
+  const { frequency, setFrequency, lastBackupAt, lastBackupSize, status, error, signedIn, email, signIn, signOut, backUpNow, restore } =
+    useBackup();
 
   const busy = status === "signingIn" || status === "backingUp" || status === "restoring";
 
   const confirmRestore = () => {
-    Alert.alert("Restore backup?", "This replaces your current data with the backup from Google Drive. Anything not yet backed up will be lost.", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Restore", style: "destructive", onPress: restore },
-    ]);
+    Alert.alert(
+      "Restore backup?",
+      "This replaces your current data with the backup from Google Drive. Anything not yet backed up will be lost.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Restore", style: "destructive", onPress: restore },
+      ],
+    );
   };
 
   return (
     <View>
       <SectionLabel className="mb-3 ml-1">Backup</SectionLabel>
-      <View className="rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 px-4 py-1 mb-8">
+      <View className="mb-8 rounded-xl border border-gray-100 bg-gray-50 px-4 py-1 dark:border-slate-800 dark:bg-slate-900">
         {/* Account */}
-        <View className="flex-row items-center justify-between py-2.5 border-b border-gray-100/60 dark:border-slate-800/60">
+        <View className="flex-row items-center justify-between border-b border-gray-100/60 py-2.5 dark:border-slate-800/60">
           <View className="flex-1">
-            <Text className="font-semibold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+            <Text className="text-text-primary font-semibold dark:text-gray-100" style={{ fontSize: body }}>
               Google account
             </Text>
-            <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+            <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
               {signedIn ? (email ?? "Signed in") : "Sign in to back up to Google Drive"}
             </Text>
           </View>
-          <Pressable onPress={signedIn ? signOut : signIn} disabled={busy} className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700">
-            <Text className="font-semibold text-primary" style={{ fontSize: captionSmall }}>
+          <Pressable
+            onPress={signedIn ? signOut : signIn}
+            disabled={busy}
+            className="rounded-lg border border-gray-200 px-3 py-1.5 dark:border-slate-700"
+          >
+            <Text className="text-primary font-semibold" style={{ fontSize: captionSmall }}>
               {signedIn ? "Sign out" : "Sign in"}
             </Text>
           </Pressable>
         </View>
 
         {/* Auto-backup frequency */}
-        <View className="py-2.5 border-b border-gray-100/60 dark:border-slate-800/60">
-          <Text className="font-semibold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+        <View className="border-b border-gray-100/60 py-2.5 dark:border-slate-800/60">
+          <Text className="text-text-primary font-semibold dark:text-gray-100" style={{ fontSize: body }}>
             Auto-backup
           </Text>
-          <Text className="text-text-muted dark:text-gray-500 mt-0.5 mb-2" style={{ fontSize: captionSmall }}>
+          <Text className="text-text-muted mt-0.5 mb-2 dark:text-gray-500" style={{ fontSize: captionSmall }}>
             Back up automatically on this cadence when the app opens
           </Text>
           <View className="flex-row gap-2">
             {FREQUENCIES.map((f) => {
               const active = frequency === f.value;
               return (
-                <Pressable key={f.value} onPress={() => setFrequency(f.value)} className={`flex-1 py-2 rounded-lg border items-center ${active ? "border-primary/40 bg-primary/5 dark:bg-primary/10" : "border-gray-200 dark:border-slate-700"}`}>
-                  <Text className={`font-semibold ${active ? "text-primary" : "text-text-secondary dark:text-gray-400"}`} style={{ fontSize: captionSmall }}>
+                <Pressable
+                  key={f.value}
+                  onPress={() => setFrequency(f.value)}
+                  className={`flex-1 items-center rounded-lg border py-2 ${active ? "border-primary/40 bg-primary/5 dark:bg-primary/10" : "border-gray-200 dark:border-slate-700"}`}
+                >
+                  <Text
+                    className={`font-semibold ${active ? "text-primary" : "text-text-secondary dark:text-gray-400"}`}
+                    style={{ fontSize: captionSmall }}
+                  >
                     {f.label}
                   </Text>
                 </Pressable>
@@ -84,8 +100,8 @@ export function BackupSection() {
         </View>
 
         {/* Last backup */}
-        <View className="flex-row items-center justify-between py-2.5 border-b border-gray-100/60 dark:border-slate-800/60">
-          <Text className="font-semibold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+        <View className="flex-row items-center justify-between border-b border-gray-100/60 py-2.5 dark:border-slate-800/60">
+          <Text className="text-text-primary font-semibold dark:text-gray-100" style={{ fontSize: body }}>
             Last backup
           </Text>
           <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
@@ -96,27 +112,43 @@ export function BackupSection() {
 
         {/* Actions */}
         <View className="flex-row gap-2 py-2.5">
-          <Pressable onPress={backUpNow} disabled={busy} className="flex-1 py-2.5 rounded-xl bg-primary flex-row items-center justify-center gap-2">
-            {status === "backingUp" ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Ionicons name="cloud-upload-outline" size={16} color="#FFFFFF" />}
+          <Pressable
+            onPress={backUpNow}
+            disabled={busy}
+            className="bg-primary flex-1 flex-row items-center justify-center gap-2 rounded-xl py-2.5"
+          >
+            {status === "backingUp" ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Ionicons name="cloud-upload-outline" size={16} color="#FFFFFF" />
+            )}
             <Text className="font-semibold text-white" style={{ fontSize: body }}>
               {status === "backingUp" ? "Backing up…" : "Back up now"}
             </Text>
           </Pressable>
-          <Pressable onPress={confirmRestore} disabled={busy} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 flex-row items-center justify-center gap-2">
-            {status === "restoring" ? <ActivityIndicator size="small" color={theme.primary} /> : <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />}
-            <Text className="font-semibold text-primary" style={{ fontSize: body }}>
+          <Pressable
+            onPress={confirmRestore}
+            disabled={busy}
+            className="flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 dark:border-slate-700"
+          >
+            {status === "restoring" ? (
+              <ActivityIndicator size="small" color={theme.primary} />
+            ) : (
+              <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
+            )}
+            <Text className="text-primary font-semibold" style={{ fontSize: body }}>
               {status === "restoring" ? "Restoring…" : "Restore"}
             </Text>
           </Pressable>
         </View>
 
         {error ? (
-          <Text className="text-red-500 dark:text-red-400 pb-2.5" style={{ fontSize: captionSmall }}>
+          <Text className="pb-2.5 text-red-500 dark:text-red-400" style={{ fontSize: captionSmall }}>
             {error}
           </Text>
         ) : null}
 
-        <Text className="text-text-muted dark:text-gray-500 pb-2.5" style={{ fontSize: captionSmall }}>
+        <Text className="text-text-muted pb-2.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
           Backups include your recordings, favorites, bookmarks, collections, recents, and settings.
         </Text>
       </View>

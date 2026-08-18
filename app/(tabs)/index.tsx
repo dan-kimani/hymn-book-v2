@@ -28,6 +28,17 @@ function getGreeting(): { text: string; emoji: string } {
   return { text: "Nĩwatinda owega?", emoji: "⭐" };
 }
 
+const openHymn = (bookId: string, number: number, verse?: number, stanza?: number) =>
+  router.push({
+    pathname: "/hymn/[bookId]/[number]",
+    params: {
+      bookId,
+      number: String(number),
+      verse: verse != null ? String(verse) : undefined,
+      stanza: stanza != null ? String(stanza) : undefined,
+    },
+  });
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [focused, setFocused] = useState(false);
@@ -144,17 +155,6 @@ export default function HomeScreen() {
     return () => clearTimeout(timer);
   }, [localQuery, searchScope, setQuery]);
 
-  const openHymn = (bookId: string, number: number, verse?: number, stanza?: number) =>
-    router.push({
-      pathname: "/hymn/[bookId]/[number]",
-      params: {
-        bookId,
-        number: String(number),
-        verse: verse != null ? String(verse) : undefined,
-        stanza: stanza != null ? String(stanza) : undefined,
-      },
-    });
-
   const active = query.length > 0 && results.length > 0;
   const empty = query.length > 0 && !searching && results.length === 0;
   const idle = !active && !empty;
@@ -165,7 +165,7 @@ export default function HomeScreen() {
     <View className="flex-1 bg-white dark:bg-slate-950">
       {/* ── Greeting header — slides out on scroll or focus ── */}
       <Animated.View
-        className="absolute left-0 right-0 z-30"
+        className="absolute right-0 left-0 z-30"
         style={{
           paddingTop: insets.top + 8,
           opacity: headerOpacity,
@@ -175,10 +175,10 @@ export default function HomeScreen() {
       >
         <View className="flex-row items-center justify-between px-5">
           <View>
-            <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: 28, lineHeight: 34 }}>
+            <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: 28, lineHeight: 34 }}>
               {greeting.text}
             </Text>
-            <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: 14 }}>
+            <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: 14 }}>
               Nyĩmbo na Kĩrĩkanĩro
             </Text>
           </View>
@@ -187,16 +187,20 @@ export default function HomeScreen() {
       </Animated.View>
 
       {/* ── Floating search bar — slides up on scroll or focus ── */}
-      <Animated.View className="absolute left-0 right-0 z-20" style={{ top: searchBarTop, paddingTop: insets.top }}>
+      <Animated.View className="absolute right-0 left-0 z-20" style={{ top: searchBarTop, paddingTop: insets.top }}>
         <TopGlow height={insets.top + 72} opacity={atTopAnim} />
 
-        <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: insets.top + 72, opacity: atTopAnim }} pointerEvents="none">
+        <Animated.View
+          className="absolute top-0 right-0 left-0 overflow-hidden"
+          style={{ height: insets.top + 72, opacity: atTopAnim }}
+          pointerEvents="none"
+        >
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
 
         <View className="px-5 pt-4 pb-3">
           <View
-            className={`flex-row items-center px-4 h-12 rounded-2xl gap-3 ${focused ? "bg-white dark:bg-slate-800 border border-primary/30" : "bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800"}`}
+            className={`h-12 flex-row items-center gap-3 rounded-2xl px-4 ${focused ? "border-primary/30 border bg-white dark:bg-slate-800" : "border border-gray-100 bg-gray-50 dark:border-slate-800 dark:bg-slate-900"}`}
             style={{
               shadowColor: focused ? theme.primary : isDark ? "#000" : "#1E293B",
               shadowOffset: { width: 0, height: focused ? 0 : 2 },
@@ -207,7 +211,7 @@ export default function HomeScreen() {
           >
             <Ionicons name="search" size={17} color={focused ? theme.primary : theme.textMuted} />
             <TextInput
-              className="flex-1 text-[15px] text-text-primary dark:text-gray-100"
+              className="text-text-primary flex-1 text-[15px] dark:text-gray-100"
               placeholder="Search hymns by number, title, or lyrics…"
               placeholderTextColor={theme.textMuted}
               value={localQuery}
@@ -239,7 +243,11 @@ export default function HomeScreen() {
           keyExtractor={(item, i) => `${item.hymnId}-${item.stanzaIndex}-${i}`}
           renderItem={({ item }) => (
             <View className="px-5">
-              <SearchResultRow result={item} query={query} onPress={() => openHymn(item.bookId, item.hymnNumber, item.verseNumber, item.stanzaIndex)} />
+              <SearchResultRow
+                result={item}
+                query={query}
+                onPress={() => openHymn(item.bookId, item.hymnNumber, item.verseNumber, item.stanzaIndex)}
+              />
             </View>
           )}
           contentContainerStyle={{
@@ -262,9 +270,9 @@ export default function HomeScreen() {
           onScroll={handleScroll}
         >
           {empty && (
-            <View className="items-center justify-center py-24 gap-2">
+            <View className="items-center justify-center gap-2 py-24">
               <Ionicons name="search-outline" size={36} color={theme.textMuted} />
-              <Text className="font-medium text-text-secondary dark:text-gray-400 mt-2" style={{ fontSize: bodySmall }}>
+              <Text className="text-text-secondary mt-2 font-medium dark:text-gray-400" style={{ fontSize: bodySmall }}>
                 No hymns found
               </Text>
               <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>
@@ -276,29 +284,31 @@ export default function HomeScreen() {
           {/* ── Hymn of the Day ── */}
           {dailyHymn && idle && (
             <View className="mx-5 mb-8">
-              <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-3">Hymn of the Day</Text>
+              <Text className="text-text-muted mb-3 text-[11px] font-semibold tracking-[1.5px] uppercase dark:text-gray-500">
+                Hymn of the Day
+              </Text>
               <PressableScale onPress={() => openHymn(dailyHymn.bookId, dailyHymn.number)}>
                 <View
-                  className="rounded-xl px-2 py-3.5 border border-gray-100 dark:border-slate-800"
+                  className="rounded-xl border border-gray-100 px-2 py-3.5 dark:border-slate-800"
                   style={{
                     backgroundColor: isDark ? `${theme.primary}0D` : `${theme.primary}08`,
                   }}
                 >
-                  <View className="flex-row items-center gap-2 mb-1.5">
-                    <View className="py-0.5 rounded-md bg-primary-tint dark:bg-primary/20">
-                      <Text className="font-semibold text-primary" style={{ fontSize: captionSmall }}>
+                  <View className="mb-1.5 flex-row items-center gap-2">
+                    <View className="bg-primary-tint dark:bg-primary/20 rounded-md py-0.5">
+                      <Text className="text-primary font-semibold" style={{ fontSize: captionSmall }}>
                         {dailyHymn.bookName}
                       </Text>
                     </View>
-                    <Text className="font-medium text-text-muted dark:text-gray-400" style={{ fontSize: captionSmall }}>
+                    <Text className="text-text-muted font-medium dark:text-gray-400" style={{ fontSize: captionSmall }}>
                       #{dailyHymn.number}
                     </Text>
                   </View>
-                  <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={2} style={{ fontSize: bodySmall }}>
+                  <Text className="text-text-primary font-bold dark:text-gray-100" numberOfLines={2} style={{ fontSize: bodySmall }}>
                     {dailyHymn.title}
                   </Text>
                   {dailyHymn.snippet ? (
-                    <Text className="text-text-secondary dark:text-gray-400 mt-1" numberOfLines={2} style={{ fontSize: caption }}>
+                    <Text className="text-text-secondary mt-1 dark:text-gray-400" numberOfLines={2} style={{ fontSize: caption }}>
                       {dailyHymn.snippet}
                     </Text>
                   ) : null}
@@ -309,9 +319,9 @@ export default function HomeScreen() {
 
           {/* ── Books ── */}
           {idle && (
-            <View className="mb-8 mx-5">
-              <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500 mb-3">Books</Text>
-              <View className="flex-row -mx-1.5">
+            <View className="mx-5 mb-8">
+              <Text className="text-text-muted mb-3 text-[11px] font-semibold tracking-[1.5px] uppercase dark:text-gray-500">Books</Text>
+              <View className="-mx-1.5 flex-row">
                 {BOOKS.map((book) => (
                   <View key={book.id} className="w-1/4 px-1.5">
                     <PressableScale onPress={() => router.push({ pathname: "/book/[bookId]", params: { bookId: book.id } })}>
@@ -326,20 +336,24 @@ export default function HomeScreen() {
                         }}
                       >
                         <View
-                          className="rounded-xl overflow-hidden"
+                          className="overflow-hidden rounded-xl"
                           style={{
                             aspectRatio: 1,
                             backgroundColor: isDark ? `${book.color}1A` : `${book.color}0F`,
                           }}
                         >
-                          <Image source={BOOK_COVERS[book.id]} className="w-full h-full" resizeMode="cover" />
+                          <Image source={BOOK_COVERS[book.id]} className="h-full w-full" resizeMode="cover" />
                         </View>
                       </View>
                       <View className="mt-1.5 items-center">
-                        <Text className="font-semibold text-text-primary dark:text-gray-100 text-center" numberOfLines={1} style={{ fontSize: captionSmall }}>
+                        <Text
+                          className="text-text-primary text-center font-semibold dark:text-gray-100"
+                          numberOfLines={1}
+                          style={{ fontSize: captionSmall }}
+                        >
                           {book.shortName}
                         </Text>
-                        <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+                        <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
                           {book.count} hymns
                         </Text>
                       </View>
@@ -353,8 +367,10 @@ export default function HomeScreen() {
           {/* ── Recent Hymns ── */}
           {recents.length > 0 && idle && (
             <View className="mb-8">
-              <View className="flex-row items-end justify-between mx-5 mb-3">
-                <Text className="text-[11px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500">Recently opened</Text>
+              <View className="mx-5 mb-3 flex-row items-end justify-between">
+                <Text className="text-text-muted text-[11px] font-semibold tracking-[1.5px] uppercase dark:text-gray-500">
+                  Recently opened
+                </Text>
                 <Pressable onPress={() => useRecentsStore.getState().clearRecents()} hitSlop={8}>
                   <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>
                     Clear
@@ -365,13 +381,17 @@ export default function HomeScreen() {
                 {recents.slice(0, 5).map((item) => {
                   const book = BOOKS.find((b) => b.id === item.bookId);
                   return (
-                    <PressableScale key={item.hymnId} className="flex-row items-center gap-3" onPress={() => openHymn(item.bookId, item.number)}>
-                      <View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: book?.color ?? theme.primary }} />
+                    <PressableScale
+                      key={item.hymnId}
+                      className="flex-row items-center gap-3"
+                      onPress={() => openHymn(item.bookId, item.number)}
+                    >
+                      <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: book?.color ?? theme.primary }} />
                       <View className="flex-1">
-                        <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
+                        <Text className="text-text-primary font-bold dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
                           {item.title}
                         </Text>
-                        <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+                        <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
                           {item.bookName} · #{item.number}
                         </Text>
                       </View>

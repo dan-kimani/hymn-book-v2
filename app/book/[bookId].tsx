@@ -25,6 +25,10 @@ const BOOK_INFO: Record<string, { name: string; language: string; color: string 
 
 const BOOK_IDS = Object.keys(BOOK_INFO);
 
+const goToBook = (id: string) => {
+  router.setParams({ bookId: id });
+};
+
 export default function BookDetailScreen() {
   const insets = useSafeAreaInsets();
   const { heading, body, bodyLarge, caption, captionSmall } = useFontScale();
@@ -48,10 +52,6 @@ export default function BookDetailScreen() {
   const currentBookIdx = BOOK_IDS.indexOf(bookId ?? "");
   const prevBookId = currentBookIdx > 0 ? BOOK_IDS[currentBookIdx - 1] : null;
   const nextBookId = currentBookIdx < BOOK_IDS.length - 1 ? BOOK_IDS[currentBookIdx + 1] : null;
-
-  const goToBook = (id: string) => {
-    router.setParams({ bookId: id });
-  };
 
   const maxNum = hymns.length;
 
@@ -96,32 +96,44 @@ export default function BookDetailScreen() {
         if (!cancelled) setHymnData({ key: bookId, hymns: [] });
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [bookId]);
 
   return (
     <Animated.View className="flex-1 bg-white dark:bg-slate-950" style={{ transform: [{ translateX: slideX }] }} {...edgePan.panHandlers}>
       {/* Header — floating glass, scroll-responsive */}
-      <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
+      <Animated.View className="absolute top-0 right-0 left-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
         {/* Tall seamless gradient — opaque behind header, imperceptibly fades to transparent */}
         <TopGlow height={headerHeight + 130} opacity={headerOpacity} />
 
         {/* BlurView — only behind the header, fades in on scroll */}
-        <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
+        <Animated.View
+          className="absolute top-0 right-0 left-0 overflow-hidden"
+          style={{ height: headerHeight, opacity: headerOpacity }}
+          pointerEvents="none"
+        >
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
 
-        <View className="flex-row items-start px-4 pb-4 gap-3">
+        <View className="flex-row items-start gap-3 px-4 pb-4">
           <PressableScale onPress={() => router.back()} hitSlop={8} className="pt-0.5">
             <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
           </PressableScale>
           <View className="flex-1">
-            <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: heading }}>{info.name}</Text>
-            <View className="flex-row items-center gap-2 mt-1">
-              <View className="px-2 py-0.5 rounded-md bg-primary-tint dark:bg-primary/20">
-                <Text className="font-semibold text-primary dark:text-primary-light" style={{ fontSize: captionSmall }}>{info.language}</Text>
+            <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: heading }}>
+              {info.name}
+            </Text>
+            <View className="mt-1 flex-row items-center gap-2">
+              <View className="bg-primary-tint dark:bg-primary/20 rounded-md px-2 py-0.5">
+                <Text className="text-primary dark:text-primary-light font-semibold" style={{ fontSize: captionSmall }}>
+                  {info.language}
+                </Text>
               </View>
-              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>{loading ? "Loading..." : `${hymns.length} hymns`}</Text>
+              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>
+                {loading ? "Loading..." : `${hymns.length} hymns`}
+              </Text>
             </View>
           </View>
           <ThemeToggle />
@@ -152,10 +164,12 @@ export default function BookDetailScreen() {
           const hasRecording = !!recordings[item.id];
           return (
             <PressableScale
-              className="flex-row items-center px-4 py-3.5 border-b-hairline border-border-light dark:border-gray-800 gap-3"
+              className="border-b-hairline border-border-light flex-row items-center gap-3 px-4 py-3.5 dark:border-gray-800"
               onPress={() => router.push({ pathname: "/hymn/[bookId]/[number]", params: { bookId: bookId!, number: String(item.number) } })}
             >
-              <Text className={`font-bold min-w-6 ${info.color}`} style={{ fontSize: body }}>{item.number}.</Text>
+              <Text className={`min-w-6 font-bold ${info.color}`} style={{ fontSize: body }}>
+                {item.number}.
+              </Text>
               <View className="flex-1">
                 <Text className="text-text-primary dark:text-gray-100" numberOfLines={2} style={{ fontSize: bodyLarge }}>
                   <Text className="font-semibold">{item.title}</Text>
@@ -164,7 +178,7 @@ export default function BookDetailScreen() {
               </View>
               {hasRecording && (
                 <View
-                  className="w-5 h-5 rounded-full items-center justify-center"
+                  className="h-5 w-5 items-center justify-center rounded-full"
                   style={{ backgroundColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(249,115,22,0.12)" }}
                 >
                   <Ionicons name="mic" size={11} color={theme.primary} />
@@ -180,7 +194,7 @@ export default function BookDetailScreen() {
       {/* Quick-jump floating button */}
       {!loading && (
         <Pressable
-          className="absolute right-5 bottom-24 w-11 h-11 rounded-2xl bg-primary/90 items-center justify-center"
+          className="bg-primary/90 absolute right-5 bottom-24 h-11 w-11 items-center justify-center rounded-2xl"
           style={{
             shadowColor: theme.primary,
             shadowOffset: { width: 0, height: 2 },

@@ -68,18 +68,22 @@ export default function FavoritesScreen() {
   return (
     <View className="flex-1 bg-white dark:bg-slate-950">
       {/* Floating header — fades in on scroll */}
-      <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
+      <Animated.View className="absolute top-0 right-0 left-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
         <TopGlow height={headerHeight + 130} opacity={headerOpacity} />
 
-        <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
+        <Animated.View
+          className="absolute top-0 right-0 left-0 overflow-hidden"
+          style={{ height: headerHeight, opacity: headerOpacity }}
+          pointerEvents="none"
+        >
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
 
         <View className="px-4 pb-4">
-          <Text className="font-extrabold tracking-tight text-text-primary dark:text-gray-100" style={{ fontSize: fontSize + 14 }}>
+          <Text className="text-text-primary font-extrabold tracking-tight dark:text-gray-100" style={{ fontSize: fontSize + 14 }}>
             Saved
           </Text>
-          <Text className="font-medium text-text-secondary dark:text-gray-400 mt-1" style={{ fontSize: body }}>
+          <Text className="text-text-secondary mt-1 font-medium dark:text-gray-400" style={{ fontSize: body }}>
             Your hymns, recordings, and collections
           </Text>
         </View>
@@ -91,21 +95,30 @@ export default function FavoritesScreen() {
         scrollEventThrottle={16}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
         ListHeaderComponent={
-          <View className="flex-row gap-3 mb-6">
+          <View className="mb-6 flex-row gap-3">
             {tiles.map((t) => (
-              <Pressable key={t.label} className="flex-1 rounded-2xl items-center py-4" style={{ backgroundColor: isDark ? "rgba(30,41,59,0.4)" : "#F8FAFC" }} onPress={() => router.push(t.path as any)}>
+              <Pressable
+                key={t.label}
+                className="flex-1 items-center rounded-2xl py-4"
+                style={{ backgroundColor: isDark ? "rgba(30,41,59,0.4)" : "#F8FAFC" }}
+                onPress={() => router.push(t.path as any)}
+              >
                 <Ionicons name={t.icon as any} size={24} color={t.color} />
-                <Text className="font-bold text-text-primary dark:text-gray-100 mt-1.5" style={{ fontSize: fontSize + 2 }}>
+                <Text className="text-text-primary mt-1.5 font-bold dark:text-gray-100" style={{ fontSize: fontSize + 2 }}>
                   {t.count}
                 </Text>
-                <Text className="font-medium text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                <Text className="text-text-muted font-medium dark:text-gray-500" style={{ fontSize: captionSmall }}>
                   {t.label}
                 </Text>
               </Pressable>
             ))}
           </View>
         }
-        data={[{ type: "section" as const, key: "col-header", label: "Collections" }, { type: "create" as const, key: "create" }, ...collections.map((col) => ({ type: "collection" as const, key: col.id, ...col }))]}
+        data={[
+          { type: "section" as const, key: "col-header", label: "Collections" },
+          { type: "create" as const, key: "create" },
+          ...collections.map((col) => ({ type: "collection" as const, key: col.id, ...col })),
+        ]}
         renderItem={({ item }: any) => {
           if (item.type === "section") {
             return (
@@ -121,7 +134,7 @@ export default function FavoritesScreen() {
                 {creating ? (
                   <View className="flex-row items-center gap-2">
                     <TextInput
-                      className="flex-1 bg-gray-50 dark:bg-slate-900 rounded-xl px-4 py-2.5 text-text-primary dark:text-gray-100 border border-gray-100 dark:border-slate-800"
+                      className="text-text-primary flex-1 rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900 dark:text-gray-100"
                       placeholder="Collection name"
                       placeholderTextColor={theme.textMuted}
                       value={newName}
@@ -130,7 +143,7 @@ export default function FavoritesScreen() {
                       autoFocus
                       style={{ fontSize: body }}
                     />
-                    <Pressable className="px-4 py-2.5 bg-primary rounded-xl" onPress={handleCreate}>
+                    <Pressable className="bg-primary rounded-xl px-4 py-2.5" onPress={handleCreate}>
                       <Text className="font-semibold text-white" style={{ fontSize: bodySmall }}>
                         Create
                       </Text>
@@ -146,9 +159,12 @@ export default function FavoritesScreen() {
                     </Pressable>
                   </View>
                 ) : (
-                  <Pressable className="flex-row items-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-gray-300 dark:border-slate-700" onPress={() => setCreating(true)}>
+                  <Pressable
+                    className="flex-row items-center gap-2 rounded-xl border border-dashed border-gray-300 px-3 py-2.5 dark:border-slate-700"
+                    onPress={() => setCreating(true)}
+                  >
                     <Ionicons name="add" size={18} color={theme.primary} />
-                    <Text className="font-medium text-primary" style={{ fontSize: body }}>
+                    <Text className="text-primary font-medium" style={{ fontSize: body }}>
                       New collection
                     </Text>
                   </Pressable>
@@ -160,13 +176,22 @@ export default function FavoritesScreen() {
           if (item.type === "collection") {
             const emoji = defaultEmoji[item.id];
             return (
-              <Pressable className="flex-row items-center gap-3 py-2.5 px-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 mb-2" onPress={() => router.push({ pathname: "/collection/[id]", params: { id: item.id } })}>
-                <View className="w-10 h-10 rounded-lg  items-center justify-center">{emoji ? <Text style={{ fontSize: 24 }}>{emoji}</Text> : <Ionicons name="folder-outline" size={18} color={theme.textMuted} />}</View>
+              <Pressable
+                className="mb-2 flex-row items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900"
+                onPress={() => router.push({ pathname: "/collection/[id]", params: { id: item.id } })}
+              >
+                <View className="h-10 w-10 items-center justify-center rounded-lg">
+                  {emoji ? (
+                    <Text style={{ fontSize: 24 }}>{emoji}</Text>
+                  ) : (
+                    <Ionicons name="folder-outline" size={18} color={theme.textMuted} />
+                  )}
+                </View>
                 <View className="flex-1">
-                  <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+                  <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: body }}>
                     {item.name}
                   </Text>
-                  <Text className="text-text-muted dark:text-gray-500 mt-0.5" style={{ fontSize: captionSmall }}>
+                  <Text className="text-text-muted mt-0.5 dark:text-gray-500" style={{ fontSize: captionSmall }}>
                     {item.hymns.length} hymn{item.hymns.length === 1 ? "" : "s"}
                   </Text>
                 </View>

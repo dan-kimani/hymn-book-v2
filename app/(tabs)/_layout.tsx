@@ -58,7 +58,11 @@ export default function TabLayout() {
           <View style={{ flex: 1 }}>
             {/* Bottom-to-top glow — fades from opaque at screen bottom to transparent above tabs */}
             <LinearGradient
-              colors={isDark ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.6)", "rgba(15,23,42,0.12)", "transparent"] : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.1)", "transparent"]}
+              colors={
+                isDark
+                  ? ["rgba(15,23,42,0.92)", "rgba(15,23,42,0.6)", "rgba(15,23,42,0.12)", "transparent"]
+                  : ["rgba(255,255,255,0.92)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.1)", "transparent"]
+              }
               locations={[0, 0.35, 0.7, 1]}
               start={{ x: 0, y: 1 }}
               end={{ x: 0, y: 0 }}
@@ -86,7 +90,9 @@ export default function TabLayout() {
         },
         tabBarIcon: ({ focused }) => {
           const item = TAB_ITEMS[route.name] ?? TAB_ITEMS.index;
-          return <Ionicons name={(focused ? item.activeIcon : item.icon) as any} size={21} color={focused ? theme.primary : theme.textMuted} />;
+          return (
+            <Ionicons name={(focused ? item.activeIcon : item.icon) as any} size={21} color={focused ? theme.primary : theme.textMuted} />
+          );
         },
       })}
     >

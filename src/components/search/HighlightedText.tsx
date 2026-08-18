@@ -4,7 +4,10 @@ import { theme } from "@/theme/colors";
 
 /** Strip diacritics and lowercase for comparison — mirrors FTS5 indexing. */
 function fold(s: string): string {
-  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
 }
 
 interface Segment {
@@ -16,7 +19,19 @@ interface Segment {
  * Renders `text` with all occurrences of the `query` terms highlighted.
  * Diacritic-aware: searching "utuk" will highlight "ũtukũ" in the original text.
  */
-export function HighlightedText({ text, query, className, style, numberOfLines }: { text: string; query: string; className?: string; style?: any; numberOfLines?: number }) {
+export function HighlightedText({
+  text,
+  query,
+  className,
+  style,
+  numberOfLines,
+}: {
+  text: string;
+  query: string;
+  className?: string;
+  style?: any;
+  numberOfLines?: number;
+}) {
   if (!query.trim()) {
     return (
       <Text className={className} style={style} numberOfLines={numberOfLines}>

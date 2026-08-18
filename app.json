@@ -52,12 +52,8 @@
             "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
             "enableBundleCompression": true,
-            "buildArchs": [
-              "arm64-v8a"
-            ],
-            "resourceConfigurations": [
-              "en"
-            ]
+            "buildArchs": ["arm64-v8a"],
+            "resourceConfigurations": ["en"]
           }
         }
       ],

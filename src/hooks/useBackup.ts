@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { currentUserEmail, isSignedIn } from "@/services/drive/googleSignIn";
-import {
-  runBackup,
-  runRestore,
-  runSignIn,
-  runSignOut,
-} from "@/services/backup/runBackup";
+import { runBackup, runRestore, runSignIn, runSignOut } from "@/services/backup/runBackup";
 import { useBackupStore } from "@/state/backupStore";
 
 /** UI-facing hook: exposes backup state plus the actions a screen can trigger. */

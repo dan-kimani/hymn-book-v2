@@ -17,22 +17,26 @@ export function SearchResultRow({ result, query, onPress }: SearchResultRowProps
 
   return (
     <PressableScale
-      className="p-4 rounded-xl bg-surface dark:bg-slate-900 border border-border-light dark:border-slate-800 mb-2"
+      className="bg-surface border-border-light mb-2 rounded-xl border p-4 dark:border-slate-800 dark:bg-slate-900"
       onPress={onPress}
     >
-      <View className="flex-row items-center gap-2 mb-1.5">
-        <View className="px-2.5 py-0.5 rounded-lg bg-primary-tint dark:bg-primary/20">
-          <Text className="font-bold text-primary" style={{ fontSize: captionSmall }}>{result.bookName}</Text>
+      <View className="mb-1.5 flex-row items-center gap-2">
+        <View className="bg-primary-tint dark:bg-primary/20 rounded-lg px-2.5 py-0.5">
+          <Text className="text-primary font-bold" style={{ fontSize: captionSmall }}>
+            {result.bookName}
+          </Text>
         </View>
-        <Text className="font-medium text-primary" style={{ fontSize: caption }}>#{result.hymnNumber}</Text>
+        <Text className="text-primary font-medium" style={{ fontSize: caption }}>
+          #{result.hymnNumber}
+        </Text>
       </View>
-      <Text className="font-bold text-text-primary dark:text-gray-100 mb-1" style={{ fontSize: body }}>
+      <Text className="text-text-primary mb-1 font-bold dark:text-gray-100" style={{ fontSize: body }}>
         {result.hymnTitle}
       </Text>
       <HighlightedText
         text={result.stanzaText}
         query={query ?? ""}
-        className="text-text-secondary dark:text-gray-400 leading-5"
+        className="text-text-secondary leading-5 dark:text-gray-400"
         style={{ fontSize: bodySmall }}
         numberOfLines={4}
       />

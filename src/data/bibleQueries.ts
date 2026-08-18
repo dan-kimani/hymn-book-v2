@@ -43,10 +43,7 @@ export async function fetchBibleChapterCount(bookId: number): Promise<number> {
 
 // ── Verses ─────────────────────────────────────────────────────
 
-export async function fetchBibleChapter(
-  bookId: number,
-  chapter: number,
-): Promise<BibleVerse[]> {
+export async function fetchBibleChapter(bookId: number, chapter: number): Promise<BibleVerse[]> {
   const db = await getBibleDatabase();
   return db.getAllAsync<BibleVerse>(
     "SELECT book_id AS bookId, chapter, verse, text FROM verses WHERE book_id = ? AND chapter = ? ORDER BY verse",
@@ -54,11 +51,7 @@ export async function fetchBibleChapter(
   );
 }
 
-export async function fetchBibleVerse(
-  bookId: number,
-  chapter: number,
-  verse: number,
-): Promise<BibleVerse | null> {
+export async function fetchBibleVerse(bookId: number, chapter: number, verse: number): Promise<BibleVerse | null> {
   const db = await getBibleDatabase();
   return db.getFirstAsync<BibleVerse>(
     "SELECT book_id AS bookId, chapter, verse, text FROM verses WHERE book_id = ? AND chapter = ? AND verse = ?",
@@ -68,20 +61,13 @@ export async function fetchBibleVerse(
 
 // ── Reference resolution ──────────────────────────────────────
 
-export async function resolveBibleReference(
-  query: string,
-): Promise<BibleReference | null> {
+export async function resolveBibleReference(query: string): Promise<BibleReference | null> {
   const books = await fetchBibleBooks();
   const folded = foldQuery(query);
 
   // Try each book name as prefix (longest first)
   for (const book of books) {
-    for (const nameVariant of [
-      foldQuery(book.name),
-      foldQuery(book.englishName),
-      foldQuery(book.usfm),
-      foldQuery(book.shortName),
-    ]) {
+    for (const nameVariant of [foldQuery(book.name), foldQuery(book.englishName), foldQuery(book.usfm), foldQuery(book.shortName)]) {
       if (!folded.startsWith(nameVariant)) continue;
       const remainder = folded.slice(nameVariant.length).trim();
 
@@ -124,9 +110,7 @@ export async function resolveBibleReference(
 
 // ── Search ─────────────────────────────────────────────────────
 
-export async function searchBibleBooks(
-  query: string,
-): Promise<BibleBook[]> {
+export async function searchBibleBooks(query: string): Promise<BibleBook[]> {
   const books = await fetchBibleBooks();
   const folded = foldQuery(query);
   if (!folded) return [];
@@ -140,10 +124,7 @@ export async function searchBibleBooks(
   );
 }
 
-export async function searchBibleVerses(
-  query: string,
-  limit = 50,
-): Promise<BibleSearchResult[]> {
+export async function searchBibleVerses(query: string, limit = 50): Promise<BibleSearchResult[]> {
   const db = await getBibleDatabase();
   const sanitized = query.replace(/['"*^()]/g, "").trim();
   if (!sanitized) return [];
@@ -177,9 +158,7 @@ export async function fetchCrossReferences(
   verse?: number,
 ): Promise<(CrossReference & { sourceVerse: number })[]> {
   const db = await getBibleDatabase();
-  const where = verse != null
-    ? "cr.book_id = ? AND cr.chapter = ? AND cr.verse = ?"
-    : "cr.book_id = ? AND cr.chapter = ?";
+  const where = verse != null ? "cr.book_id = ? AND cr.chapter = ? AND cr.verse = ?" : "cr.book_id = ? AND cr.chapter = ?";
   const params = verse != null ? [bookId, chapter, verse] : [bookId, chapter];
   const rows = await db.getAllAsync<any>(
     `SELECT cr.verse AS sourceVerse, cr.ref_book_id AS bookId, b.name AS bookName,

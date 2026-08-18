@@ -45,12 +45,12 @@ export function AIStudyModal({ visible, reference, onClose }: AIStudyModalProps)
       }}
     >
       <View className="flex-1 bg-white dark:bg-slate-950" style={{ paddingTop: insets.top }}>
-        <View className="flex-row items-center gap-2.5 px-5 py-3 border-b border-gray-100 dark:border-slate-800">
-          <View className="w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
+        <View className="flex-row items-center gap-2.5 border-b border-gray-100 px-5 py-3 dark:border-slate-800">
+          <View className="bg-primary/10 h-8 w-8 items-center justify-center rounded-lg">
             <Ionicons name="sparkles-outline" size={16} color={theme.primary} />
           </View>
           <View className="flex-1">
-            <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+            <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: body }}>
               AI Bible Study
             </Text>
             <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
@@ -90,7 +90,7 @@ export function AIStudyModal({ visible, reference, onClose }: AIStudyModalProps)
           />
 
           {!ready && (
-            <View className="absolute inset-0 bg-white dark:bg-slate-950 items-center justify-center gap-3">
+            <View className="absolute inset-0 items-center justify-center gap-3 bg-white dark:bg-slate-950">
               <ActivityIndicator size="large" color={theme.primary} />
               <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: bodySmall }}>
                 Loading Bible Study...

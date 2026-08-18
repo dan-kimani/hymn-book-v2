@@ -24,7 +24,10 @@ export async function fetchHymnMeta(bookId: string): Promise<Array<{ id: string;
 export async function fetchHymn(hymnId: string): Promise<Hymn | null> {
   try {
     const db = await getDatabase();
-    const row = await db.getFirstAsync<any>('SELECT id, book_id as bookId, number, title, "first_line" as firstLine, verses_json FROM hymns WHERE id = ?', [hymnId]);
+    const row = await db.getFirstAsync<any>(
+      'SELECT id, book_id as bookId, number, title, "first_line" as firstLine, verses_json FROM hymns WHERE id = ?',
+      [hymnId],
+    );
     if (!row) return null;
     const verses = row.verses_json ? JSON.parse(row.verses_json) : [];
     return { ...row, verses };

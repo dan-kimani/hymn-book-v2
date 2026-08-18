@@ -10,11 +10,11 @@ export function ChapterShimmer({ paddingTop = 80 }: { paddingTop?: number }) {
       scrollEnabled={false}
     >
       {/* Chapter title */}
-      <View className="mb-6 mt-2">
-        <View className="h-3.5 w-28 rounded-md bg-gray-100 dark:bg-slate-800 mb-2 overflow-hidden">
+      <View className="mt-2 mb-6">
+        <View className="mb-2 h-3.5 w-28 overflow-hidden rounded-md bg-gray-100 dark:bg-slate-800">
           <ShimmerBar />
         </View>
-        <View className="h-6 w-40 rounded-lg bg-gray-100 dark:bg-slate-800 overflow-hidden">
+        <View className="h-6 w-40 overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800">
           <ShimmerBar />
         </View>
       </View>
@@ -23,25 +23,25 @@ export function ChapterShimmer({ paddingTop = 80 }: { paddingTop?: number }) {
       {[1, 2, 3, 4].map((v) => (
         <View key={v} className="mb-4 px-5">
           <View className="flex-row gap-2">
-            <View className="h-3.5 w-5 rounded-sm bg-gray-100 dark:bg-slate-800 overflow-hidden mt-0.5">
+            <View className="mt-0.5 h-3.5 w-5 overflow-hidden rounded-sm bg-gray-100 dark:bg-slate-800">
               <ShimmerBar />
             </View>
             <View className="flex-1 gap-2">
-              <View className="h-4 rounded-lg bg-gray-100 dark:bg-slate-800 overflow-hidden" style={{ width: "100%" }}>
+              <View className="h-4 overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800" style={{ width: "100%" }}>
                 <ShimmerBar />
               </View>
-              <View className="h-4 rounded-lg bg-gray-100 dark:bg-slate-800 overflow-hidden" style={{ width: "92%" }}>
+              <View className="h-4 overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800" style={{ width: "92%" }}>
                 <ShimmerBar />
               </View>
-              <View className="h-4 rounded-lg bg-gray-100 dark:bg-slate-800 overflow-hidden" style={{ width: "65%" }}>
+              <View className="h-4 overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800" style={{ width: "65%" }}>
                 <ShimmerBar />
               </View>
               {v % 2 === 0 && (
-                <View className="flex-row gap-2 mt-1">
-                  <View className="h-3 w-16 rounded-md bg-gray-100 dark:bg-slate-800 overflow-hidden">
+                <View className="mt-1 flex-row gap-2">
+                  <View className="h-3 w-16 overflow-hidden rounded-md bg-gray-100 dark:bg-slate-800">
                     <ShimmerBar />
                   </View>
-                  <View className="h-3 w-14 rounded-md bg-gray-100 dark:bg-slate-800 overflow-hidden">
+                  <View className="h-3 w-14 overflow-hidden rounded-md bg-gray-100 dark:bg-slate-800">
                     <ShimmerBar />
                   </View>
                 </View>

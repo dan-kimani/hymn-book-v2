@@ -53,7 +53,9 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
   // Preload hymns when visible
   useEffect(() => {
     if (visible && allHymns.length === 0) {
-      fetchHymnMeta(bookId).then(setAllHymns).catch(() => {});
+      fetchHymnMeta(bookId)
+        .then(setAllHymns)
+        .catch(() => {});
     }
   }, [visible, bookId, allHymns.length]);
 
@@ -116,7 +118,9 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
       onChange={handleChange}
       enablePanDownToClose
       onClose={handleDismiss}
-      backdropComponent={(props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} onPress={handleDismiss} />}
+      backdropComponent={(props) => (
+        <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} onPress={handleDismiss} />
+      )}
       handleIndicatorStyle={{ backgroundColor: isDark ? "#475569" : "#cbd5e1", width: 40 }}
       backgroundStyle={{ backgroundColor: isDark ? "#0f172a" : "#fff" }}
       topInset={insets.top + 12}
@@ -126,7 +130,7 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
       {/* Search input */}
       <View className="px-5 pt-1 pb-3">
         <View
-          className="flex-row items-center px-4 h-11.5 rounded-2xl gap-3 bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800"
+          className="h-11.5 flex-row items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 px-4 dark:border-slate-800 dark:bg-slate-900"
           style={{
             shadowColor: theme.primary,
             shadowOffset: { width: 0, height: 0 },
@@ -137,7 +141,7 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
         >
           <Ionicons name="search" size={17} color={theme.textMuted} />
           <BottomSheetTextInput
-            className="flex-1 text-text-primary dark:text-gray-100"
+            className="text-text-primary flex-1 dark:text-gray-100"
             style={{ fontSize: body }}
             placeholder={`Search ${bookName}…`}
             placeholderTextColor={theme.textMuted}
@@ -165,7 +169,9 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
         ListEmptyComponent={
           emptyMessage ? (
             <View className="items-center py-8">
-              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>{emptyMessage}</Text>
+              <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>
+                {emptyMessage}
+              </Text>
             </View>
           ) : null
         }
@@ -175,22 +181,34 @@ export function JumpSheet({ visible, bookId, bookName, maxNum, onClose }: JumpSh
           const isSearch = !!query.trim();
           return (
             <Pressable
-              className="py-3 border-b border-gray-100/60 dark:border-slate-800/60"
+              className="border-b border-gray-100/60 py-3 dark:border-slate-800/60"
               onPress={() => {
                 if (num) handleSelect(parseInt(String(num)));
               }}
             >
-              <View className="flex-row items-center gap-2 mb-0.5">
-                <Text className="font-bold text-primary" style={{ fontSize: caption }}>#{num}</Text>
-                {isSearch && item.bookName && <Text className="text-text-muted dark:text-gray-500 uppercase" style={{ fontSize: captionSmall }}>{item.bookName}</Text>}
+              <View className="mb-0.5 flex-row items-center gap-2">
+                <Text className="text-primary font-bold" style={{ fontSize: caption }}>
+                  #{num}
+                </Text>
+                {isSearch && item.bookName && (
+                  <Text className="text-text-muted uppercase dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                    {item.bookName}
+                  </Text>
+                )}
               </View>
-              <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
+              <Text className="text-text-primary font-bold dark:text-gray-100" numberOfLines={1} style={{ fontSize: body }}>
                 {title}
               </Text>
               {isSearch && item.stanzaText && item.stanzaText !== `Go to hymn ${num}` ? (
-                <HighlightedText text={item.stanzaText} query={query} className="text-text-secondary dark:text-gray-400 mt-0.5" style={{ fontSize: caption }} numberOfLines={2} />
+                <HighlightedText
+                  text={item.stanzaText}
+                  query={query}
+                  className="text-text-secondary mt-0.5 dark:text-gray-400"
+                  style={{ fontSize: caption }}
+                  numberOfLines={2}
+                />
               ) : item.snippet ? (
-                <Text className="text-text-secondary dark:text-gray-400 mt-0.5" numberOfLines={2} style={{ fontSize: caption }}>
+                <Text className="text-text-secondary mt-0.5 dark:text-gray-400" numberOfLines={2} style={{ fontSize: caption }}>
                   {item.snippet}
                 </Text>
               ) : null}

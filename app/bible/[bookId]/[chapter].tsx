@@ -49,10 +49,16 @@ function VerseRow({
   const bmBg = bookmarked && !selected && !highlighted ? "bg-amber-50 dark:bg-amber-950/20 rounded-lg py-1.5 -mx-1" : "";
 
   return (
-    <Pressable className={`mb-3 px-5 ${hlBg} ${selBg} ${bmBg}`} onLongPress={onLongPress} onPress={onPress} delayLongPress={400} onLayout={(e) => onLayout?.(e.nativeEvent.layout.y)}>
+    <Pressable
+      className={`mb-3 px-5 ${hlBg} ${selBg} ${bmBg}`}
+      onLongPress={onLongPress}
+      onPress={onPress}
+      delayLongPress={400}
+      onLayout={(e) => onLayout?.(e.nativeEvent.layout.y)}
+    >
       <Text className="text-text-primary dark:text-gray-100" style={{ fontSize, lineHeight: leading }}>
         <Text
-          className={bookmarked && !selected ? "text-amber-700 font-semibold" : "text-primary dark:text-primary-light font-medium"}
+          className={bookmarked && !selected ? "font-semibold text-amber-700" : "text-primary dark:text-primary-light font-medium"}
           style={{
             fontSize: vsSize,
             lineHeight: leading,
@@ -125,7 +131,7 @@ export default function BibleChapterScreen() {
   const isBookmarked = useBibleBookmarksStore((s) => s.isBookmarked);
 
   const { selectionRef, englishSelectionRef, selectionText, headerVerses } = useMemo(() => {
-    const sorted = verses.filter((v) => selectedVerses.has(v.verse)).sort((a, b) => a.verse - b.verse);
+    const sorted = verses.filter((v) => selectedVerses.has(v.verse)).toSorted((a, b) => a.verse - b.verse);
     const verseRange = sorted.length > 0 ? `${ch}:${sorted[0].verse}${sorted.length > 1 ? `-${sorted[sorted.length - 1].verse}` : ""}` : "";
     return {
       headerVerses: sorted,
@@ -191,11 +197,7 @@ export default function BibleChapterScreen() {
     let cancelled = false;
     (async () => {
       try {
-        const [bk, vs, crs] = await Promise.all([
-          fetchBibleBook(id),
-          fetchBibleChapter(id, ch),
-          fetchCrossReferences(id, ch),
-        ]);
+        const [bk, vs, crs] = await Promise.all([fetchBibleBook(id), fetchBibleChapter(id, ch), fetchCrossReferences(id, ch)]);
         if (cancelled) return;
         const map: Record<number, CrossReference[]> = {};
         for (const cr of crs) {
@@ -228,21 +230,24 @@ export default function BibleChapterScreen() {
     }
   }, [highlightVerse, verses.length]);
 
-  const handleRefPress = useCallback((ref: CrossReference) => {
-    if (ref.bookId === id && ref.chapter === ch) {
-      // Same chapter — highlight and scroll instead of pushing a duplicate screen.
-      setHighlightedVs(ref.verseStart);
-      const y = verseYs.current[ref.verseStart];
-      if (y != null) {
-        scrollRef.current?.scrollTo?.({ y: Math.max(y - 140, 0), animated: true });
+  const handleRefPress = useCallback(
+    (ref: CrossReference) => {
+      if (ref.bookId === id && ref.chapter === ch) {
+        // Same chapter — highlight and scroll instead of pushing a duplicate screen.
+        setHighlightedVs(ref.verseStart);
+        const y = verseYs.current[ref.verseStart];
+        if (y != null) {
+          scrollRef.current?.scrollTo?.({ y: Math.max(y - 140, 0), animated: true });
+        }
+        return;
       }
-      return;
-    }
-    router.push({
-      pathname: "/bible/[bookId]/[chapter]" as any,
-      params: { bookId: String(ref.bookId), chapter: String(ref.chapter), verse: String(ref.verseStart) },
-    });
-  }, [id, ch]);
+      router.push({
+        pathname: "/bible/[bookId]/[chapter]" as any,
+        params: { bookId: String(ref.bookId), chapter: String(ref.chapter), verse: String(ref.verseStart) },
+      });
+    },
+    [id, ch],
+  );
 
   const goToChapter = useCallback(
     (newCh: number) => {
@@ -274,34 +279,38 @@ export default function BibleChapterScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: bg }}>
       {/* Floating header */}
-      <Animated.View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+      <Animated.View className="absolute top-0 right-0 left-0 z-10" style={{ paddingTop: insets.top }}>
         <TopGlow height={insets.top + 80} opacity={headerOpacity} />
 
-        <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: insets.top + 48, opacity: headerOpacity }} pointerEvents="none">
+        <Animated.View
+          className="absolute top-0 right-0 left-0 overflow-hidden"
+          style={{ height: insets.top + 48, opacity: headerOpacity }}
+          pointerEvents="none"
+        >
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
 
-        <View className="flex-row items-center px-3 h-12 gap-2" style={{ backgroundColor: "transparent" }}>
+        <View className="h-12 flex-row items-center gap-2 px-3" style={{ backgroundColor: "transparent" }}>
           <Pressable onPress={() => router.back()} hitSlop={8} className="pr-1">
             <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
           </Pressable>
           <View className="flex-1 flex-row items-center gap-2">
             {selectionAnchor != null ? (
               <>
-                <Pressable onPress={handleSelectAll} className="px-2 py-0.5 rounded-md bg-primary-tint/40 dark:bg-primary/20">
-                  <Text className="font-semibold text-primary" style={{ fontSize: captionSmall }}>
+                <Pressable onPress={handleSelectAll} className="bg-primary-tint/40 dark:bg-primary/20 rounded-md px-2 py-0.5">
+                  <Text className="text-primary font-semibold" style={{ fontSize: captionSmall }}>
                     Select All
                   </Text>
                 </Pressable>
-                <Pressable onPress={clearSelection} className="px-2 py-0.5 rounded-md bg-gray-200/60 dark:bg-slate-700/40">
-                  <Text className="font-semibold text-text-secondary dark:text-gray-400" style={{ fontSize: captionSmall }}>
+                <Pressable onPress={clearSelection} className="rounded-md bg-gray-200/60 px-2 py-0.5 dark:bg-slate-700/40">
+                  <Text className="text-text-secondary font-semibold dark:text-gray-400" style={{ fontSize: captionSmall }}>
                     Deselect
                   </Text>
                 </Pressable>
               </>
             ) : (
               <>
-                <Text className="font-semibold text-text-primary dark:text-gray-100 line-clamp-1" style={{ fontSize: heading }}>
+                <Text className="text-text-primary line-clamp-1 font-semibold dark:text-gray-100" style={{ fontSize: heading }}>
                   {book?.name ?? "..."}
                 </Text>
                 <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: bodySmall }}>
@@ -321,7 +330,11 @@ export default function BibleChapterScreen() {
             <Ionicons name="chevron-back" size={18} color={ch <= 1 ? theme.textMuted : isDark ? "#94A3B8" : theme.textSecondary} />
           </Pressable>
           <Pressable onPress={() => goToChapter(ch + 1)} disabled={ch >= totalChapters} hitSlop={8} className="p-1.5">
-            <Ionicons name="chevron-forward" size={18} color={ch >= totalChapters ? theme.textMuted : isDark ? "#94A3B8" : theme.textSecondary} />
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={ch >= totalChapters ? theme.textMuted : isDark ? "#94A3B8" : theme.textSecondary}
+            />
           </Pressable>
         </View>
       </Animated.View>
@@ -343,9 +356,9 @@ export default function BibleChapterScreen() {
             scrollEventThrottle={16}
           >
             {/* Chapter title */}
-            <View className="px-5 mb-6 mt-2">
-              <Text className="text-[13px] font-semibold tracking-[1.5px] uppercase text-text-muted dark:text-gray-500">{book?.name}</Text>
-              <Text className="font-bold text-text-primary dark:text-gray-100 mt-1" style={{ fontSize: fontSize + 4 }}>
+            <View className="mt-2 mb-6 px-5">
+              <Text className="text-text-muted text-[13px] font-semibold tracking-[1.5px] uppercase dark:text-gray-500">{book?.name}</Text>
+              <Text className="text-text-primary mt-1 font-bold dark:text-gray-100" style={{ fontSize: fontSize + 4 }}>
                 Chapter {ch}
               </Text>
             </View>
@@ -368,11 +381,11 @@ export default function BibleChapterScreen() {
             ))}
 
             {/* Bottom chapter navigation */}
-            <View className="flex-row justify-center gap-4 mt-8 mb-4">
+            <View className="mt-8 mb-4 flex-row justify-center gap-4">
               <Pressable
                 onPress={() => goToChapter(ch - 1)}
                 disabled={ch <= 1}
-                className={`flex-row items-center gap-1.5 px-5 py-2.5 rounded-full ${ch <= 1 ? "opacity-30" : ""}`}
+                className={`flex-row items-center gap-1.5 rounded-full px-5 py-2.5 ${ch <= 1 ? "opacity-30" : ""}`}
                 style={{
                   backgroundColor: isDark ? "rgba(30,41,59,0.6)" : theme.surfaceAlt,
                 }}
@@ -385,7 +398,7 @@ export default function BibleChapterScreen() {
               <Pressable
                 onPress={() => goToChapter(ch + 1)}
                 disabled={ch >= totalChapters}
-                className={`flex-row items-center gap-1.5 px-5 py-2.5 rounded-full ${ch >= totalChapters ? "opacity-30" : ""}`}
+                className={`flex-row items-center gap-1.5 rounded-full px-5 py-2.5 ${ch >= totalChapters ? "opacity-30" : ""}`}
                 style={{
                   backgroundColor: isDark ? "rgba(30,41,59,0.6)" : theme.surfaceAlt,
                 }}
@@ -400,20 +413,31 @@ export default function BibleChapterScreen() {
         )}
 
         {selectionAnchor != null && selectedVerses.size > 0 && (
-          <VerseSelectionBar text={`${selectionRef}\n\n${selectionText}`} verseCount={selectedVerses.size} anchorY={verseYs.current[selectionAnchor] ?? 200} scrollY={scrollY} onBookmark={handleBookmark} onCopy={handleCopied} onAskAI={() => setAiVisible(true)} />
+          <VerseSelectionBar
+            text={`${selectionRef}\n\n${selectionText}`}
+            verseCount={selectedVerses.size}
+            anchorY={verseYs.current[selectionAnchor] ?? 200}
+            scrollY={scrollY}
+            onBookmark={handleBookmark}
+            onCopy={handleCopied}
+            onAskAI={() => setAiVisible(true)}
+          />
         )}
       </View>
 
       {/* Copy toast */}
       {copied && (
-        <View className="absolute px-5 py-2.5 rounded-full bg-primary/90 z-20" style={{ top: "50%", left: "50%", transform: [{ translateX: -50 }, { translateY: -50 }] }}>
-          <Text className="text-white text-sm font-semibold">Copied {selectedVerses.size} verses</Text>
+        <View
+          className="bg-primary/90 absolute z-20 rounded-full px-5 py-2.5"
+          style={{ top: "50%", left: "50%", transform: [{ translateX: -50 }, { translateY: -50 }] }}
+        >
+          <Text className="text-sm font-semibold text-white">Copied {selectedVerses.size} verses</Text>
         </View>
       )}
 
       {/* Font controls floating pill */}
       <View
-        className="absolute left-4 flex-row items-center px-2.5 py-2 rounded-2xl gap-1.5 overflow-hidden z-10"
+        className="absolute left-4 z-10 flex-row items-center gap-1.5 overflow-hidden rounded-2xl px-2.5 py-2"
         style={{
           bottom: insets.bottom + 20,
           shadowColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(148,163,184,0.15)",
@@ -434,7 +458,15 @@ export default function BibleChapterScreen() {
 
       <AIStudyModal visible={aiVisible} reference={englishSelectionRef} onClose={() => setAiVisible(false)} />
 
-      <CrossRefExplorer visible={explorerVisible} bookId={id} bookName={book?.name ?? ""} chapter={ch} crossRefsMap={crossRefsMap} verses={verses} onClose={() => setExplorerVisible(false)} />
+      <CrossRefExplorer
+        visible={explorerVisible}
+        bookId={id}
+        bookName={book?.name ?? ""}
+        chapter={ch}
+        crossRefsMap={crossRefsMap}
+        verses={verses}
+        onClose={() => setExplorerVisible(false)}
+      />
     </View>
   );
 }

@@ -45,7 +45,7 @@ export default function BookmarksListScreen() {
             if (!groups[key]) groups[key] = [];
             groups[key].push(bm);
           }
-          return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+          return Object.entries(groups).toSorted(([a], [b]) => b.localeCompare(a));
         })()
       : null;
 
@@ -63,8 +63,10 @@ export default function BookmarksListScreen() {
           <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
         </Pressable>
         <View className="flex-1">
-          <Text className="font-bold tracking-tight text-text-primary dark:text-gray-100" style={{ fontSize: fontSize + 10 }}>Bookmarks</Text>
-          <Text className="font-medium text-text-secondary dark:text-gray-400 mt-1" style={{ fontSize: body }}>
+          <Text className="text-text-primary font-bold tracking-tight dark:text-gray-100" style={{ fontSize: fontSize + 10 }}>
+            Bookmarks
+          </Text>
+          <Text className="text-text-secondary mt-1 font-medium dark:text-gray-400" style={{ fontSize: body }}>
             {bookmarks.length} bookmark{bookmarks.length === 1 ? "" : "s"}
           </Text>
         </View>
@@ -78,8 +80,12 @@ export default function BookmarksListScreen() {
         ListEmptyComponent={
           <View className="items-center pt-16">
             <Ionicons name="bookmark-outline" size={36} color={theme.textMuted} />
-            <Text className="font-medium text-text-secondary dark:text-gray-400 mt-3" style={{ fontSize: body }}>No bookmarks yet</Text>
-            <Text className="text-text-muted dark:text-gray-500 text-center mt-1" style={{ fontSize: captionSmall }}>Bookmark a verse while reading</Text>
+            <Text className="text-text-secondary mt-3 font-medium dark:text-gray-400" style={{ fontSize: body }}>
+              No bookmarks yet
+            </Text>
+            <Text className="text-text-muted mt-1 text-center dark:text-gray-500" style={{ fontSize: captionSmall }}>
+              Bookmark a verse while reading
+            </Text>
           </View>
         }
         renderItem={({ item }: any) => {
@@ -94,23 +100,25 @@ export default function BookmarksListScreen() {
               });
             return (
               <Pressable
-                className="flex-row items-center gap-3 py-3 px-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/20 mb-1"
+                className="mb-1 flex-row items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/50 px-3 py-3 dark:border-amber-900/20 dark:bg-amber-950/10"
                 onPress={toggle}
               >
                 <Ionicons name={isOpen ? "chevron-down" : "chevron-forward"} size={16} color={theme.textMuted} />
                 <View className="flex-1">
-                  <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+                  <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: body }}>
                     {monthLabel(item.month + "-01")}
                   </Text>
                 </View>
-                <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>{item.count} bookmarks</Text>
+                <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
+                  {item.count} bookmarks
+                </Text>
               </Pressable>
             );
           }
 
           return (
             <Pressable
-              className="flex-row items-start gap-3 py-2.5 px-3 rounded-xl mb-1 ml-4"
+              className="mb-1 ml-4 flex-row items-start gap-3 rounded-xl px-3 py-2.5"
               onPress={() =>
                 router.push({
                   pathname: "/bible/[bookId]/[chapter]" as any,
@@ -118,20 +126,20 @@ export default function BookmarksListScreen() {
                 })
               }
             >
-              <View className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 items-center justify-center mt-0.5">
+              <View className="mt-0.5 h-9 w-9 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
                 <Ionicons name="bookmark" size={16} color="#B45309" />
               </View>
               <View className="flex-1">
-                <Text className="font-bold text-text-primary dark:text-gray-100" numberOfLines={1} style={{ fontSize: bodySmall }}>
+                <Text className="text-text-primary font-bold dark:text-gray-100" numberOfLines={1} style={{ fontSize: bodySmall }}>
                   {item.bookName} {item.chapter}:{item.verseStart}
                   {item.verseEnd !== item.verseStart ? `-${item.verseEnd}` : ""}
                 </Text>
                 {item.note ? (
-                  <Text className="text-text-secondary dark:text-gray-400 mt-0.5" numberOfLines={2} style={{ fontSize: captionSmall }}>
+                  <Text className="text-text-secondary mt-0.5 dark:text-gray-400" numberOfLines={2} style={{ fontSize: captionSmall }}>
                     {item.note}
                   </Text>
                 ) : null}
-                <Text className="text-[11px] text-text-muted dark:text-gray-500 mt-0.5">{relativeTime(item.createdAt)}</Text>
+                <Text className="text-text-muted mt-0.5 text-[11px] dark:text-gray-500">{relativeTime(item.createdAt)}</Text>
               </View>
               <Pressable onPress={() => removeBookmark(item.id)} hitSlop={8}>
                 <Ionicons name="close" size={14} color={theme.textMuted} />

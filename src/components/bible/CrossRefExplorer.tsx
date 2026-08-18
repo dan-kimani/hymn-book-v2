@@ -61,14 +61,17 @@ function RefVerseCard({ ref, captionSize, captionSmallSize, bodySize, onOpenInCh
     };
   }, [expanded, ref.bookId, ref.chapter, ref.verseStart, refText]);
 
-  const refLabel = ref.verseStart === ref.verseEnd ? `${ref.shortName} ${ref.chapter}:${ref.verseStart}` : `${ref.shortName} ${ref.chapter}:${ref.verseStart}-${ref.verseEnd}`;
+  const refLabel =
+    ref.verseStart === ref.verseEnd
+      ? `${ref.shortName} ${ref.chapter}:${ref.verseStart}`
+      : `${ref.shortName} ${ref.chapter}:${ref.verseStart}-${ref.verseEnd}`;
 
   return (
-    <View className="ml-3 mb-1.5">
+    <View className="mb-1.5 ml-3">
       <View className="flex-row items-center gap-2 py-1.5">
-        <Pressable className="flex-row items-center gap-2 flex-1" onPress={() => setExpanded(!expanded)}>
+        <Pressable className="flex-1 flex-row items-center gap-2" onPress={() => setExpanded(!expanded)}>
           <Ionicons name={expanded ? "chevron-down" : "chevron-forward"} size={12} color={theme.primary} />
-          <Text className="font-medium text-primary" style={{ fontSize: captionSize }}>
+          <Text className="text-primary font-medium" style={{ fontSize: captionSize }}>
             {refLabel}
           </Text>
         </Pressable>
@@ -77,22 +80,22 @@ function RefVerseCard({ ref, captionSize, captionSmallSize, bodySize, onOpenInCh
         </Pressable>
       </View>
       {expanded && (
-        <View className="ml-4 pl-3 border-l border-primary/20 mt-1 mb-2">
+        <View className="border-primary/20 mt-1 mb-2 ml-4 border-l pl-3">
           {loading ? (
-            <Text className="text-text-muted dark:text-gray-500 italic" style={{ fontSize: captionSmallSize }}>
+            <Text className="text-text-muted italic dark:text-gray-500" style={{ fontSize: captionSmallSize }}>
               Loading...
             </Text>
           ) : refText ? (
-            <Text className="text-text-primary dark:text-gray-100 leading-relaxed" style={{ fontSize: bodySize }}>
+            <Text className="text-text-primary leading-relaxed dark:text-gray-100" style={{ fontSize: bodySize }}>
               {refText}
             </Text>
           ) : (
-            <Text className="text-text-muted dark:text-gray-500 italic" style={{ fontSize: captionSmallSize }}>
+            <Text className="text-text-muted italic dark:text-gray-500" style={{ fontSize: captionSmallSize }}>
               Verse text not available
             </Text>
           )}
-          <Pressable className="flex-row items-center gap-1 mt-2" onPress={onOpenInChapter}>
-            <Text className="font-medium text-primary" style={{ fontSize: captionSmallSize }}>
+          <Pressable className="mt-2 flex-row items-center gap-1" onPress={onOpenInChapter}>
+            <Text className="text-primary font-medium" style={{ fontSize: captionSmallSize }}>
               Open in chapter
             </Text>
             <Ionicons name="arrow-forward" size={11} color={theme.primary} />
@@ -113,7 +116,7 @@ export function CrossRefExplorer({ visible, bookId, bookName, chapter, crossRefs
   const sourceGroups = useMemo(() => {
     const verseNums = Object.keys(crossRefsMap)
       .map(Number)
-      .sort((a, b) => a - b);
+      .toSorted((a, b) => a - b);
     return verseNums.map((vn) => ({
       verse: vn,
       text: verses.find((v) => v.verse === vn)?.text ?? "",
@@ -152,7 +155,9 @@ export function CrossRefExplorer({ visible, bookId, bookName, chapter, crossRefs
       onChange={handleChange}
       enablePanDownToClose
       onClose={onClose}
-      backdropComponent={(props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} onPress={onClose} />}
+      backdropComponent={(props) => (
+        <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} onPress={onClose} />
+      )}
       handleIndicatorStyle={{ backgroundColor: isDark ? "#475569" : "#cbd5e1", width: 40 }}
       backgroundStyle={{ backgroundColor: isDark ? "#0f172a" : "#fff" }}
       topInset={insets.top + 12}
@@ -160,21 +165,25 @@ export function CrossRefExplorer({ visible, bookId, bookName, chapter, crossRefs
     >
       {/* Header */}
       <View className="mb-5 px-4">
-        <View className="flex-row items-center gap-2.5 mb-1">
-          <View className="w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
+        <View className="mb-1 flex-row items-center gap-2.5">
+          <View className="bg-primary/10 h-8 w-8 items-center justify-center rounded-lg">
             <Ionicons name="git-branch-outline" size={16} color={theme.primary} />
           </View>
-          <Text className="font-bold text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+          <Text className="text-text-primary font-bold dark:text-gray-100" style={{ fontSize: body }}>
             Cross-Reference Explorer
           </Text>
         </View>
         <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>
-          {bookName} {chapter} · {totalRefs} connection{totalRefs === 1 ? "" : "s"} across {sourceGroups.length} verse{sourceGroups.length === 1 ? "" : "s"}
+          {bookName} {chapter} · {totalRefs} connection{totalRefs === 1 ? "" : "s"} across {sourceGroups.length} verse
+          {sourceGroups.length === 1 ? "" : "s"}
         </Text>
       </View>
-      <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 60 }} showsVerticalScrollIndicator={false}>
+      <BottomSheetScrollView
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 60 }}
+        showsVerticalScrollIndicator={false}
+      >
         {sourceGroups.length === 0 ? (
-          <View className="items-center py-12 gap-2">
+          <View className="items-center gap-2 py-12">
             <Ionicons name="link-outline" size={32} color={theme.textMuted} />
             <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: caption }}>
               No cross-references for this chapter
@@ -184,11 +193,11 @@ export function CrossRefExplorer({ visible, bookId, bookName, chapter, crossRefs
           sourceGroups.map((group) => (
             <View key={group.verse} className="mb-4">
               {/* Source verse */}
-              <View className="flex-row gap-2 mb-2">
-                <Text className="font-semibold text-text-muted dark:text-gray-500" style={{ fontSize: caption, minWidth: 24 }}>
+              <View className="mb-2 flex-row gap-2">
+                <Text className="text-text-muted font-semibold dark:text-gray-500" style={{ fontSize: caption, minWidth: 24 }}>
                   {group.verse}
                 </Text>
-                <Text className="flex-1 shrink text-text-primary dark:text-gray-100" style={{ fontSize, lineHeight: fontSize * 1.5 }}>
+                <Text className="text-text-primary flex-1 shrink dark:text-gray-100" style={{ fontSize, lineHeight: fontSize * 1.5 }}>
                   {group.text}
                 </Text>
               </View>

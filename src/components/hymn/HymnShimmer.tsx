@@ -14,23 +14,23 @@ export function HymnShimmer({ headerHeight }: HymnShimmerProps) {
       scrollEnabled={false}
     >
       {/* Title shimmer */}
-      <View className="items-center mb-8">
-        <View className="h-6 w-3/4 rounded-lg bg-gray-100 dark:bg-slate-800 mb-3 overflow-hidden">
+      <View className="mb-8 items-center">
+        <View className="mb-3 h-6 w-3/4 overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800">
           <ShimmerBar />
         </View>
-        <View className="h-3.5 w-1/3 rounded-lg bg-gray-100 dark:bg-slate-800 overflow-hidden">
+        <View className="h-3.5 w-1/3 overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800">
           <ShimmerBar />
         </View>
       </View>
       {/* Verse block shimmers */}
       {[1, 2, 3].map((v) => (
         <View key={v} className="mb-6">
-          <View className="h-3.5 w-8 rounded-md bg-gray-100 dark:bg-slate-800 mb-3 overflow-hidden">
+          <View className="mb-3 h-3.5 w-8 overflow-hidden rounded-md bg-gray-100 dark:bg-slate-800">
             <ShimmerBar />
           </View>
           <View className="gap-2.5">
             {[0.72, 0.95, 0.6, 0.85].slice(0, v === 1 ? 4 : 3).map((w, i) => (
-              <View key={i} className="h-4 rounded-lg bg-gray-100 dark:bg-slate-800 overflow-hidden" style={{ width: `${w * 100}%` }}>
+              <View key={i} className="h-4 overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-800" style={{ width: `${w * 100}%` }}>
                 <ShimmerBar />
               </View>
             ))}

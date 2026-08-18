@@ -47,9 +47,26 @@ const BOOK_COUNTS: Record<string, number> = {
   "golden-bells": 771,
 };
 
+const deleteRecordingFile = (path: string | undefined) => {
+  if (path) {
+    FileSystem.deleteAsync(path, { idempotent: true }).catch(() => {});
+  }
+};
+
+const formatTime = (secs: number) => {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+};
+
 export default function HymnReaderScreen() {
   const insets = useSafeAreaInsets();
-  const { bookId, number, verse: targetVerse, stanza: targetStanza } = useLocalSearchParams<{ bookId: string; number: string; verse?: string; stanza?: string }>();
+  const {
+    bookId,
+    number,
+    verse: targetVerse,
+    stanza: targetStanza,
+  } = useLocalSearchParams<{ bookId: string; number: string; verse?: string; stanza?: string }>();
   const { fontSize, heading, body, caption, captionSmall } = useFontScale();
   const [hymnData, setHymnData] = useState<{ key: string; hymn: Hymn } | null>(null);
   const scrollRef = useRef<any>(null);
@@ -102,12 +119,6 @@ export default function HymnReaderScreen() {
   const recording = useRecordingsStore((s) => s.recordings[hymnId]);
   const setRecording = useRecordingsStore((s) => s.setRecording);
   const removeRecording = useRecordingsStore((s) => s.removeRecording);
-
-  const deleteRecordingFile = (path: string | undefined) => {
-    if (path) {
-      FileSystem.deleteAsync(path, { idempotent: true }).catch(() => {});
-    }
-  };
 
   const finalizeRecording = async () => {
     const result = await stop();
@@ -175,12 +186,6 @@ export default function HymnReaderScreen() {
         },
       },
     ]);
-  };
-
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
   const headerOpacity = scrollY.interpolate({ inputRange: [0, 48], outputRange: [0, 1], extrapolate: "clamp" });
@@ -278,28 +283,32 @@ export default function HymnReaderScreen() {
   return (
     <View className="flex-1 bg-white dark:bg-slate-950">
       {copied && (
-        <View className="absolute top-14 left-0 right-0 z-20 items-center" pointerEvents="none">
-          <View className="bg-primary/90 dark:bg-primary/80 px-4 py-2 rounded-full">
-            <Text className="text-white text-sm font-semibold">Copied to clipboard</Text>
+        <View className="absolute top-14 right-0 left-0 z-20 items-center" pointerEvents="none">
+          <View className="bg-primary/90 dark:bg-primary/80 rounded-full px-4 py-2">
+            <Text className="text-sm font-semibold text-white">Copied to clipboard</Text>
           </View>
         </View>
       )}
 
       {/* Header — floating glass, scroll-responsive */}
-      <Animated.View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
+      <Animated.View className="absolute top-0 right-0 left-0" style={{ paddingTop: insets.top + 8, zIndex: 10 }}>
         <TopGlow height={headerHeight + 140} opacity={headerOpacity} />
-        <Animated.View className="absolute left-0 right-0 top-0 overflow-hidden" style={{ height: headerHeight, opacity: headerOpacity }} pointerEvents="none">
+        <Animated.View
+          className="absolute top-0 right-0 left-0 overflow-hidden"
+          style={{ height: headerHeight, opacity: headerOpacity }}
+          pointerEvents="none"
+        >
           <BlurView intensity={isDark ? 20 : 12} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
         </Animated.View>
-        <View className="flex-row items-start px-4 pb-3.5 gap-3">
+        <View className="flex-row items-start gap-3 px-4 pb-3.5">
           <Pressable onPress={() => router.back()} hitSlop={8} className="pt-0.5">
             <Ionicons name="chevron-back" size={22} color={isDark ? "#94A3B8" : theme.textSecondary} />
           </Pressable>
           <View className="flex-1">
-            <Text className={`font-semibold tracking-wide ${accent} dark:text-gray-100 line-clamp-1`} style={{ fontSize: heading }}>
+            <Text className={`font-semibold tracking-wide ${accent} line-clamp-1 dark:text-gray-100`} style={{ fontSize: heading }}>
               {bookName}
             </Text>
-            <Text className="text-text-muted dark:text-gray-400 mt-0.5" style={{ fontSize: caption }}>
+            <Text className="text-text-muted mt-0.5 dark:text-gray-400" style={{ fontSize: caption }}>
               Hymn No. {number}
             </Text>
           </View>
@@ -309,9 +318,17 @@ export default function HymnReaderScreen() {
             <Ionicons name="chevron-back" size={18} color={currentNum <= 1 ? theme.textMuted : isDark ? "#94A3B8" : theme.textSecondary} />
           </Pressable>
           <Pressable onPress={() => goToHymn(currentNum + 1)} disabled={currentNum >= maxNum} hitSlop={8} className="p-1">
-            <Ionicons name="chevron-forward" size={18} color={currentNum >= maxNum ? theme.textMuted : isDark ? "#94A3B8" : theme.textSecondary} />
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={currentNum >= maxNum ? theme.textMuted : isDark ? "#94A3B8" : theme.textSecondary}
+            />
           </Pressable>
-          <Pressable onPress={() => toggleFavorite({ hymnId, bookId: bookId!, bookName, number: currentNum, title: hymn?.title ?? "" })} hitSlop={8} className="pt-0.5">
+          <Pressable
+            onPress={() => toggleFavorite({ hymnId, bookId: bookId!, bookName, number: currentNum, title: hymn?.title ?? "" })}
+            hitSlop={8}
+            className="pt-0.5"
+          >
             <Ionicons name={isFav ? "heart" : "heart-outline"} size={22} color={isFav ? theme.favorite : theme.textMuted} />
           </Pressable>
         </View>
@@ -320,14 +337,14 @@ export default function HymnReaderScreen() {
       {/* Recording indicator */}
       {isRecording && (
         <Animated.View
-          className="absolute left-1/2 z-20 flex-row items-center gap-1.5 bg-red-500/90 px-3.5 py-1.5 rounded-full"
+          className="absolute left-1/2 z-20 flex-row items-center gap-1.5 rounded-full bg-red-500/90 px-3.5 py-1.5"
           style={{
             top: insets.top + 80,
             transform: [{ translateX: -50 }],
           }}
         >
-          <View className="w-2.5 h-2.5 rounded-full bg-white" />
-          <Text className="text-white text-[13px] font-semibold">{formatTime(elapsed)}</Text>
+          <View className="h-2.5 w-2.5 rounded-full bg-white" />
+          <Text className="text-[13px] font-semibold text-white">{formatTime(elapsed)}</Text>
         </Animated.View>
       )}
 
@@ -342,7 +359,10 @@ export default function HymnReaderScreen() {
             scrollEventThrottle={16}
             onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
           >
-            <Text className="font-bold text-text-primary dark:text-gray-100 text-center mb-1" style={{ fontSize: fontSize + 4, lineHeight: (fontSize + 4) * 1.4 }}>
+            <Text
+              className="text-text-primary mb-1 text-center font-bold dark:text-gray-100"
+              style={{ fontSize: fontSize + 4, lineHeight: (fontSize + 4) * 1.4 }}
+            >
               {hymn.title}
             </Text>
 
@@ -375,9 +395,13 @@ export default function HymnReaderScreen() {
                             : "transparent",
                         }}
                       >
-                        <Pressable onLongPress={() => handleCopyStanza(stanza)} delayLongPress={400} style={{ paddingHorizontal: 6, paddingVertical: 2 }}>
+                        <Pressable
+                          onLongPress={() => handleCopyStanza(stanza)}
+                          delayLongPress={400}
+                          style={{ paddingHorizontal: 6, paddingVertical: 2 }}
+                        >
                           {stanza.map((line, li) => (
-                            <Text key={li} className="text-text-primary dark:text-gray-100 font-normal" style={{ fontSize, lineHeight }}>
+                            <Text key={li} className="text-text-primary font-normal dark:text-gray-100" style={{ fontSize, lineHeight }}>
                               {line}
                             </Text>
                           ))}
@@ -401,7 +425,7 @@ export default function HymnReaderScreen() {
 
       {/* Font controls — independent floating pill */}
       <View
-        className="absolute left-4 flex-row items-center px-2.5 py-2 rounded-2xl gap-1.5 overflow-hidden"
+        className="absolute left-4 flex-row items-center gap-1.5 overflow-hidden rounded-2xl px-2.5 py-2"
         style={{
           bottom: insets.bottom + 20,
           shadowColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(148,163,184,0.15)",
@@ -420,7 +444,7 @@ export default function HymnReaderScreen() {
 
       {/* Action icons — independent vertical pill on the right */}
       <View
-        className="absolute right-4 rounded-2xl overflow-hidden"
+        className="absolute right-4 overflow-hidden rounded-2xl"
         style={{
           bottom: insets.bottom + 20,
           shadowColor: isDark ? "rgba(249,115,22,0.2)" : "rgba(148,163,184,0.15)",
@@ -435,39 +459,42 @@ export default function HymnReaderScreen() {
         </View>
         <View className="absolute inset-0 bg-white/65 dark:bg-slate-950/55" pointerEvents="none" />
 
-        <Pressable className={`w-10 h-10 items-center justify-center ${isRecording ? "bg-red-500/20" : ""}`} onPress={handleMicPress}>
+        <Pressable className={`h-10 w-10 items-center justify-center ${isRecording ? "bg-red-500/20" : ""}`} onPress={handleMicPress}>
           <Ionicons name={isRecording ? "radio" : "mic-outline"} size={18} color={isRecording ? theme.danger : theme.textMuted} />
         </Pressable>
-        <View className="h-px bg-gray-200/40 dark:bg-slate-700/40 mx-3" />
-        <Pressable className="w-10 h-10 items-center justify-center" onPress={() => setJumpVisible(true)}>
+        <View className="mx-3 h-px bg-gray-200/40 dark:bg-slate-700/40" />
+        <Pressable className="h-10 w-10 items-center justify-center" onPress={() => setJumpVisible(true)}>
           <Ionicons name="map-outline" size={18} color={theme.textMuted} />
         </Pressable>
-        <View className="h-px bg-gray-200/40 dark:bg-slate-700/40 mx-3" />
-        <Pressable className={`w-10 h-10 items-center justify-center ${isFav ? "bg-favorite/15" : ""}`} onPress={() => toggleFavorite({ hymnId, bookId: bookId!, bookName, number: currentNum, title: hymn?.title ?? "" })}>
+        <View className="mx-3 h-px bg-gray-200/40 dark:bg-slate-700/40" />
+        <Pressable
+          className={`h-10 w-10 items-center justify-center ${isFav ? "bg-favorite/15" : ""}`}
+          onPress={() => toggleFavorite({ hymnId, bookId: bookId!, bookName, number: currentNum, title: hymn?.title ?? "" })}
+        >
           <Ionicons name={isFav ? "heart" : "heart-outline"} size={18} color={isFav ? theme.favorite : theme.textMuted} />
         </Pressable>
-        <View className="h-px bg-gray-200/40 dark:bg-slate-700/40 mx-3" />
-        <Pressable className="w-10 h-10 items-center justify-center" onPress={handleShare}>
+        <View className="mx-3 h-px bg-gray-200/40 dark:bg-slate-700/40" />
+        <Pressable className="h-10 w-10 items-center justify-center" onPress={handleShare}>
           <Ionicons name="share-outline" size={18} color={theme.textMuted} />
         </Pressable>
-        <View className="h-px bg-gray-200/40 dark:bg-slate-700/40 mx-3" />
-        <Pressable className="w-10 h-10 items-center justify-center" onPress={() => setCollectionPickerVisible(true)}>
+        <View className="mx-3 h-px bg-gray-200/40 dark:bg-slate-700/40" />
+        <Pressable className="h-10 w-10 items-center justify-center" onPress={() => setCollectionPickerVisible(true)}>
           <Ionicons name="folder-outline" size={18} color={theme.textMuted} />
         </Pressable>
       </View>
 
       {/* Collection picker modal */}
       <Modal visible={collectionPickerVisible} transparent animationType="fade" onRequestClose={() => setCollectionPickerVisible(false)}>
-        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setCollectionPickerVisible(false)}>
-          <Pressable className="rounded-t-2xl bg-white dark:bg-slate-900 px-5 pt-4 pb-8" onPress={() => {}}>
-            <View className="items-center mb-4">
-              <View className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
+        <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setCollectionPickerVisible(false)}>
+          <Pressable className="rounded-t-2xl bg-white px-5 pt-4 pb-8 dark:bg-slate-900" onPress={() => {}}>
+            <View className="mb-4 items-center">
+              <View className="h-1 w-10 rounded-full bg-gray-300 dark:bg-slate-600" />
             </View>
-            <Text className="font-bold text-text-primary dark:text-gray-100 mb-4" style={{ fontSize: heading }}>
+            <Text className="text-text-primary mb-4 font-bold dark:text-gray-100" style={{ fontSize: heading }}>
               Add to collection
             </Text>
             {collections.length === 0 ? (
-              <Text className="text-text-muted dark:text-gray-500 py-4" style={{ fontSize: caption }}>
+              <Text className="text-text-muted py-4 dark:text-gray-500" style={{ fontSize: caption }}>
                 No collections yet. Create one in Saved.
               </Text>
             ) : (
@@ -476,7 +503,7 @@ export default function HymnReaderScreen() {
                 return (
                   <Pressable
                     key={col.id}
-                    className={`flex-row items-center gap-3 py-3 border-b border-gray-100/60 dark:border-slate-800/60 ${added ? "opacity-50" : ""}`}
+                    className={`flex-row items-center gap-3 border-b border-gray-100/60 py-3 dark:border-slate-800/60 ${added ? "opacity-50" : ""}`}
                     onPress={() => {
                       if (!added) {
                         addToCollection(col.id, {
@@ -490,9 +517,13 @@ export default function HymnReaderScreen() {
                       setCollectionPickerVisible(false);
                     }}
                   >
-                    <Ionicons name={added ? "checkmark-circle" : "folder-outline"} size={20} color={added ? theme.primary : theme.textMuted} />
+                    <Ionicons
+                      name={added ? "checkmark-circle" : "folder-outline"}
+                      size={20}
+                      color={added ? theme.primary : theme.textMuted}
+                    />
                     <View className="flex-1">
-                      <Text className="font-medium text-text-primary dark:text-gray-100" style={{ fontSize: body }}>
+                      <Text className="text-text-primary font-medium dark:text-gray-100" style={{ fontSize: body }}>
                         {col.name}
                       </Text>
                       <Text className="text-text-muted dark:text-gray-500" style={{ fontSize: captionSmall }}>

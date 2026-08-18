@@ -48,6 +48,8 @@ export const useHymnSearchStore = create<HymnSearchState>((set, get) => ({
   clearSearch: () => set({ query: "", results: [], searching: false }),
 
   loadDailyHymn: () => {
-    fetchDailyHymn().then((h) => set({ dailyHymn: h })).catch((e) => console.error("[hymnSearchStore.dailyHymn]", e));
+    fetchDailyHymn()
+      .then((h) => set({ dailyHymn: h }))
+      .catch((e) => console.error("[hymnSearchStore.dailyHymn]", e));
   },
 }));

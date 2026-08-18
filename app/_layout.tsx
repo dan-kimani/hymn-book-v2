@@ -28,7 +28,9 @@ export default function RootLayout() {
 
   // Prefetch bible books into Zustand so Bible tab renders instantly
   const loadBooks = useBibleStore((s) => s.loadBooks);
-  useEffect(() => { loadBooks(); }, []);
+  useEffect(() => {
+    loadBooks();
+  }, []);
 
   // Trigger a scheduled backup on launch and on return to foreground.
   useAutoBackup();
